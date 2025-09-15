@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رؤية 2026 - إدارة المساحة وبيانات العملاء</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+        
+        :root {
+            /* Night Mode Colors */
+            --bg-color: #000015;
+            --text-color: white;
+            --main-title-gradient: linear-gradient(45deg, #a8edea, #fed6e3, #ffffff);
+            --chart-bg: rgba(10, 25, 47, 0.3);
+            --chart-border: rgba(0, 191, 255, 0.3);
+            --chart-shadow: 0 0 40px rgba(0, 191, 255, 0.2);
+            --node-bg: rgba(20, 40, 70, 0.5);
+            --node-border: rgba(0, 191, 255, 0.5);
+            --node-shadow: 0 0 10px rgba(0, 191, 255, 0.3), inset 0 0 15px rgba(0, 191, 255, 0.2);
+            --node-hover-bg: rgba(30, 50, 90, 0.7);
+            --node-hover-border: rgba(137, 207, 240, 0.8);
+            --node-hover-shadow: 0 0 25px rgba(0, 191, 255, 0.6), inset 0 0 20px rgba(0, 191, 255, 0.3);
+            --line-gradient: linear-gradient(to bottom, rgba(0, 191, 255, 0.8), rgba(0, 191, 255, 0.2));
+            --horizontal-line-gradient: linear-gradient(to right, rgba(0, 191, 255, 0.2), rgba(0, 191, 255, 0.8), rgba(0, 191, 255, 0.2));
+            --year-badge-bg: rgba(255, 255, 255, 0.1);
+            --year-badge-border: rgba(0, 191, 255, 0.5);
+            --year-badge-shadow: 0 0 15px rgba(0, 191, 255, 0.4);
+        }
+
+        body.light-mode {
+            /* Light Mode Colors */
+            --bg-color: #f0f4f8;
+            --text-color: #1a202c;
+            --main-title-gradient: linear-gradient(45deg, #2a6fdb, #764ba2);
+            --chart-bg: rgba(255, 255, 255, 0.6);
+            --chart-border: rgba(0, 0, 0, 0.1);
+            --chart-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            --node-bg: rgba(255, 255, 255, 0.7);
+            --node-border: rgba(0, 0, 0, 0.2);
+            --node-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            --node-hover-bg: rgba(255, 255, 255, 1);
+            --node-hover-border: #2a6fdb;
+            --node-hover-shadow: 0 10px 20px rgba(42, 111, 219, 0.2);
+            --line-gradient: linear-gradient(to bottom, #a0aec0, #e2e8f0);
+            --horizontal-line-gradient: linear-gradient(to right, #e2e8f0, #a0aec0, #e2e8f0);
+            --year-badge-bg: rgba(0, 0, 0, 0.05);
+            --year-badge-border: rgba(0, 0, 0, 0.1);
+            --year-badge-shadow: none;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-color);
+            min-height: 100vh;
+            overflow-x: auto;
+            position: relative;
+            color: var(--text-color);
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        #starfield {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            transition: opacity 0.5s ease;
+        }
+
+        body.light-mode #starfield {
+            opacity: 0;
+        }
+
+        .theme-switcher {
+            position: fixed;
+            top: 20px; left: 20px; z-index: 1000;
+            cursor: pointer;
+            background-color: rgba(128, 128, 128, 0.2);
+            border-radius: 50px; padding: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .theme-switcher .icon {
+            font-size: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        body.light-mode .theme-switcher .icon {
+             transform: rotate(180deg);
+        }
+        
+        .dashboard-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--text-color);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .main-title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: var(--main-title-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: text-flicker 4s infinite alternate;
+        }
+
+        @keyframes text-flicker {
+            0% { opacity: 0.8; text-shadow: 0 0 10px #a8edea; }
+            50% { opacity: 1; text-shadow: 0 0 20px #fed6e3; }
+            100% { opacity: 0.9; text-shadow: 0 0 15px #ffffff; }
+        }
+        body.light-mode .main-title {
+            animation: none; /* Turn off flicker in light mode */
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .year-badge {
+            display: inline-block;
+            background: var(--year-badge-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--year-badge-border);
+            padding: 8px 20px;
+            border-radius: 50px;
+            margin-top: 15px;
+            font-weight: 500;
+            box-shadow: var(--year-badge-shadow);
+            transition: all 0.5s ease;
+        }
+        
+        .org-chart {
+            background: var(--chart-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid var(--chart-border);
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: var(--chart-shadow);
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .org-chart::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 20px;
+            background: radial-gradient(circle at 50% 50%, transparent, rgba(0, 191, 255, 0.2));
+            animation: rotate-glow 10s linear infinite;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        body.light-mode .org-chart::before {
+            opacity: 0; /* Hide glow in light mode */
+        }
+
+        @keyframes rotate-glow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .org-node {
+            background: var(--node-bg);
+            border: 2px solid var(--node-border);
+            border-radius: 15px; padding: 15px 25px; margin: 10px;
+            text-align: center; color: var(--text-color);
+            font-weight: 500; transition: all 0.3s ease;
+            cursor: pointer; position: relative; overflow: hidden;
+            box-shadow: var(--node-shadow);
+        }
+        
+        .org-node:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: var(--node-hover-shadow);
+            background: var(--node-hover-bg);
+            border-color: var(--node-hover-border);
+        }
+        
+        .ceo { font-size: 1.1rem; }
+        .assistant-manager, .expert-manager { font-size: 1rem; }
+        .department-manager { font-size: 0.9rem; }
+        .region-manager { font-size: 0.85rem; }
+
+        .ceo { background-image: linear-gradient(135deg, #483D8B, #00008B); color: white; }
+        .assistant-manager { background-image: linear-gradient(135deg, #8A2BE2, #4B0082); color: white; }
+        .expert-manager { background-image: linear-gradient(135deg, #00CED1, #20B2AA); color: white; }
+        .department-manager { background-image: linear-gradient(135deg, #4682B4, #1E90FF); color: white; }
+        .region-manager { background-image: linear-gradient(135deg, #5F9EA0, #008B8B); color: white; }
+        
+        body.light-mode .org-node { color: #1a202c; }
+        body.light-mode .ceo { background-image: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        body.light-mode .assistant-manager { background-image: linear-gradient(135deg, #f093fb, #f5576c); color: white; }
+        body.light-mode .expert-manager { background-image: linear-gradient(135deg, #4facfe, #00f2fe); color: white; }
+        body.light-mode .department-manager { background-image: linear-gradient(135deg, #43e97b, #38f9d7); color: #1a202c; }
+        body.light-mode .region-manager { background-image: linear-gradient(135deg, #fa709a, #fee140); color: #1a202c; }
+
+        .org-line {
+            width: 2px;
+            background: var(--line-gradient);
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .horizontal-line {
+            height: 2px;
+            background: var(--horizontal-line-gradient);
+            margin: 5px 0;
+        }
+        
+        .level-1 { display: flex; justify-content: center; }
+        .level-2 { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
+        .level-3 { display: flex; justify-content: space-around; flex-wrap: wrap; margin: 20px 0; }
+        .level-4 { display: flex; justify-content: space-around; align-items: flex-start; flex-wrap: wrap; margin-top: 20px;}
+        
+        .region-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 10px;
+            position: relative;
+            min-width: 200px;
+        }
+
+        .region-group::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            height: 20px;
+            width: 2px;
+            background: var(--line-gradient);
+        }
+        
+        .pulse {
+            animation: pulse-glow 2.5s infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 10px rgba(0, 191, 255, 0.3), inset 0 0 15px rgba(0, 191, 255, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(137, 207, 240, 0.6), inset 0 0 25px rgba(137, 207, 240, 0.4); }
+            100% { box-shadow: 0 0 10px rgba(0, 191, 255, 0.3), inset 0 0 15px rgba(0, 191, 255, 0.2); }
+        }
+
+        body.light-mode .pulse {
+            animation: none;
+        }
+        
+        .floating {
+            animation: floating 4s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        @media (max-width: 992px) {
+            .level-3, .level-4 {
+                flex-direction: column;
+                align-items: center;
+            }
+            .region-group {
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-title { font-size: 1.8rem; }
+            .level-2 { flex-direction: column; align-items: center; }
+            .org-chart { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="starfield"></canvas>
+    
+    <div class="theme-switcher" onclick="toggleTheme()">
+        <span class="icon">🌙</span>
+    </div>
+
+    <div class="dashboard-container">
+        <header class="header">
+            <h1 class="main-title"> إدارة المساحة وبيانات العملاء</h1>
+            <p class="subtitle">الهيكل التنظيمي</p>
+            <div class="year-badge pulse">2026</div>
+        </header>
+
+        <div class="org-chart">
+            <div class="level-1">
+                <div class="org-node ceo floating" onclick="showDetails('ceo')">
+                    <div class="position-title">المدير العام</div>
+                    <div class="manager-name">أ/عبدالعزيز العوامي</div>
+                </div>
+            </div>
+            
+            <div class="org-line" style="height: 30px;"></div>
+            
+            <div class="level-1">
+                <div class="org-node" style="background: linear-gradient(135deg, #008B8B, #48D1CC);">
+                    <div class="position-title" style="color: white;">إدارة المساحة والخرائط</div>
+                </div>
+            </div>
+            
+            <div class="org-line" style="height: 30px;"></div>
+            
+            <div class="level-2">
+                <div class="org-node assistant-manager" onclick="showDetails('assistant')">
+                    <div class="position-title">مدير عام مساعد</div>
+                    <div class="manager-name">م/سارة محمد صالح</div>
+                </div>
+                <div class="org-node expert-manager" onclick="showDetails('expert')">
+                    <div class="position-title">مدير عام خبير</div>
+                    <div class="manager-name">أ/محمد عطية</div>
+                </div>
+            </div>
+            
+            <div class="horizontal-line"></div>
+            
+            <div class="level-3">
+                <div class="org-node department-manager" onclick="showDetails('safwat')">
+                    <div class="position-title">مدير مساعد</div>
+                    <div class="manager-name">أ/صفوت عويس</div>
+                </div>
+                <div class="org-node department-manager" onclick="showDetails('hussein')">
+                    <div class="position-title">مدير مساعد</div>
+                    <div class="manager-name">أ/حسين سعيد</div>
+                </div>
+                <div class="org-node department-manager" onclick="showDetails('sami')">
+                    <div class="position-title">مدير مساعد</div>
+                    <div class="manager-name">أ/سامي عبدالمعبود</div>
+                </div>
+                <div class="org-node department-manager" onclick="showDetails('hq')">
+                    <div class="position-title">المبنى الرئيس والمكتب الفني</div>
+                    <div class="manager-name">[اسم المدير]</div>
+                </div>
+            </div>
+            
+            <div class="horizontal-line"></div>
+            
+            <div class="level-4">
+                <!-- Regions under Safwat Oweis -->
+                <div class="region-group">
+                    <div class="org-node region-manager pulse" onclick="showDetails('warraq')">
+                        <div class="position-title">منطقة الوراق</div>
+                        <div class="manager-name">أ/جمال عبدالظاهر</div>
+                    </div>
+                    <div class="org-node region-manager pulse" onclick="showDetails('saeed')">
+                        <div class="position-title">منطقة الصعيد</div>
+                        <div class="manager-name">أ/محمود عبدالسلام</div>
+                    </div>
+                    <div class="org-node region-manager pulse" onclick="showDetails('dakahlia')">
+                        <div class="position-title">منطقة الدقهلية</div>
+                        <div class="manager-name">أ/ماجد موسى</div>
+                    </div>
+                </div>
+                
+                <!-- Regions under Hussein Saeed -->
+                <div class="region-group">
+                    <div class="org-node region-manager pulse" onclick="showDetails('eastnile')">
+                        <div class="position-title">منطقة شرق النيل</div>
+                        <div class="manager-name">أ/وليد محي</div>
+                    </div>
+                    <div class="org-node region-manager pulse" onclick="showDetails('gharbia')">
+                        <div class="position-title">منطقة الغربية</div>
+                        <div class="manager-name">أ/مجدي صالح</div>
+                    </div>
+                    <div class="org-node region-manager pulse" onclick="showDetails('alex')">
+                        <div class="position-title">منطقة الإسكندرية</div>
+                        <div class="manager-name">أ/أسامة جلال</div>
+                    </div>
+                </div>
+
+                <!-- Region under Sami Abdel-Maaboud -->
+                <div class="region-group">
+                     <div class="org-node region-manager pulse" onclick="showDetails('menofia')">
+                        <div class="position-title">منطقة المنوفية</div>
+                        <div class="manager-name">أ/إسماعيل</div>
+                    </div>
+                </div>
+
+                <!-- Placeholder for Main Building's column -->
+                <div class="region-group">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showDetails(role) {
+            const details = {
+                ceo: 'المدير العام: أ/عبدالعزيز العوامي - القائد الاستراتيجي للإدارة',
+                assistant: 'مدير عام مساعد: م/سارة محمد صالح - مسؤولة عن العمليات التشغيلية والتطوير',
+                expert: 'مدير عام خبير: أ/محمد عطية - مسؤول متابعة تقدم سير الأعمال والتنسيق بين المديرين ',
+                safwat: 'مدير مساعد: أ/صفوت عويس - يشرف على مناطق الوراق، الصعيد، والدقهلية',
+                hussein: 'مدير مساعد: أ/حسين سعيد - يشرف على مناطق شرق النيل، الغربية، والإسكندرية',
+                sami: 'مدير مساعد: أ/سامي عبدالمعبود - يشرف على منطقة المنوفية',
+                hq: 'المبنى الرئيس والمكتب الفني',
+                warraq: 'مدير منطقة الوراق: أ/جمال عبدالظاهر',
+                saeed: 'مدير منطقة الصعيد: أ/محمود عبدالسلام',
+                dakahlia: 'مدير منطقة الدقهلية: أ/ماجد موسى',
+                eastnile: 'مدير منطقة شرق النيل: أ/وليد محي',
+                gharbia: 'مدير منطقة الغربية: أ/مجدي صالح',
+                alex: 'مدير منطقة الإسكندرية: أ/أسامة جلال',
+                menofia: 'مدير منطقة المنوفية: أ/إسماعيل'
+            };
+            
+            alert(details[role] || 'معلومات المنصب');
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            body.classList.toggle('light-mode');
+
+            const icon = document.querySelector('.theme-switcher .icon');
+            if (body.classList.contains('light-mode')) {
+                icon.textContent = '☀️';
+            } else {
+                icon.textContent = '🌙';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('starfield');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            const stars = [];
+            const numStars = 200;
+
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.5 + 0.5,
+                    vx: Math.random() * 0.1 - 0.05,
+                    vy: Math.random() * 0.1 - 0.05,
+                    opacity: Math.random() * 0.5 + 0.5
+                });
+            }
+
+            function draw() {
+                if(document.body.classList.contains('light-mode')) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#FFF';
+                    stars.forEach(star => {
+                        ctx.beginPath();
+                        ctx.globalAlpha = star.opacity;
+                        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        star.x += star.vx;
+                        star.y += star.vy;
+
+                        if (star.x < 0 || star.x > canvas.width) star.vx = -star.vx;
+                        if (star.y < 0 || star.y > canvas.height) star.vy = -star.vy;
+                    });
+                }
+                requestAnimationFrame(draw);
+            }
+
+            draw();
+        });
+    </script>
+</body>
+</html>
