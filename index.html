@@ -97,7 +97,7 @@
         
         .dashboard-container {
             padding: 20px;
-            max-width: 1400px;
+            max-width: 1800px; /* Increased max-width for the wider scene */
             margin: 0 auto;
             position: relative;
             z-index: 1;
@@ -201,7 +201,11 @@
         .ceo { font-size: 1.1rem; }
         .assistant-manager, .expert-manager { font-size: 1rem; }
         .department-manager { font-size: 0.9rem; }
-        .region-manager { font-size: 0.85rem; }
+        /* --- SIZE REDUCTION --- */
+        .region-manager { 
+            font-size: 0.8rem; 
+            padding: 12px 18px;
+        }
 
         .ceo { background-image: linear-gradient(135deg, #483D8B, #00008B); color: white; }
         .assistant-manager { background-image: linear-gradient(135deg, #8A2BE2, #4B0082); color: white; }
@@ -240,7 +244,7 @@
             align-items: center;
             margin: 0 10px;
             position: relative;
-            min-width: 200px;
+            min-width: 180px; /* Reduced min-width to accommodate smaller cards */
         }
 
         .region-group::before {
@@ -275,7 +279,31 @@
             50% { transform: translateY(-8px); }
             100% { transform: translateY(0px); }
         }
+
+        /* New styles for two-department layout */
+        .main-departments-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .department-column {
+            flex: 1;
+            min-width: 500px; /* Minimum width for each department block */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 15px;
+        }
         
+        @media (max-width: 1200px) {
+            .department-column {
+                min-width: 90%;
+                margin-bottom: 40px;
+            }
+        }
+
         @media (max-width: 992px) {
             .level-3, .level-4 {
                 flex-direction: column;
@@ -316,93 +344,114 @@
             </div>
             
             <div class="org-line" style="height: 30px;"></div>
-            
-            <div class="level-1">
-                <div class="org-node" style="background: linear-gradient(135deg, #008B8B, #48D1CC);">
-                    <div class="position-title" style="color: white;">إدارة المساحة والخرائط</div>
-                </div>
-            </div>
-            
-            <div class="org-line" style="height: 30px;"></div>
-            
-            <div class="level-2">
-                <div class="org-node assistant-manager" onclick="showDetails('assistant')">
-                    <div class="position-title">مدير عام مساعد</div>
-                    <div class="manager-name">م/سارة محمد صالح</div>
-                </div>
-                <div class="org-node expert-manager" onclick="showDetails('expert')">
-                    <div class="position-title">مدير عام خبير</div>
-                    <div class="manager-name">أ/محمد عطية</div>
-                </div>
-            </div>
-            
-            <div class="horizontal-line"></div>
-            
-            <div class="level-3">
-                <div class="org-node department-manager" onclick="showDetails('safwat')">
-                    <div class="position-title">مدير مساعد</div>
-                    <div class="manager-name">أ/صفوت عويس</div>
-                </div>
-                <div class="org-node department-manager" onclick="showDetails('hussein')">
-                    <div class="position-title">مدير مساعد</div>
-                    <div class="manager-name">أ/حسين سعيد</div>
-                </div>
-                <div class="org-node department-manager" onclick="showDetails('sami')">
-                    <div class="position-title">مدير مساعد</div>
-                    <div class="manager-name">أ/سامي عبدالمعبود</div>
-                </div>
-                <div class="org-node department-manager" onclick="showDetails('hq')">
-                    <div class="position-title">المبنى الرئيس والمكتب الفني</div>
-                    <div class="manager-name">[اسم المدير]</div>
-                </div>
-            </div>
-            
-            <div class="horizontal-line"></div>
-            
-            <div class="level-4">
-                <!-- Regions under Safwat Oweis -->
-                <div class="region-group">
-                    <div class="org-node region-manager pulse" onclick="showDetails('warraq')">
-                        <div class="position-title">منطقة الوراق</div>
-                        <div class="manager-name">أ/جمال عبدالظاهر</div>
+            <div class="horizontal-line" style="width: 50%; margin: 0 auto;"></div>
+
+            <!-- Container for the main department branches -->
+            <div class="main-departments-container">
+
+                <!-- EXISTING Survey Department Column (NOW ON THE LEFT) -->
+                <div class="department-column">
+                    <div class="org-line" style="height: 20px;"></div>
+                    <div class="org-node" style="background: linear-gradient(135deg, #008B8B, #48D1CC);">
+                        <div class="position-title" style="color: white;">إدارة المساحة والخرائط</div>
                     </div>
-                    <div class="org-node region-manager pulse" onclick="showDetails('saeed')">
-                        <div class="position-title">منطقة الصعيد</div>
-                        <div class="manager-name">أ/محمود عبدالسلام</div>
+                    
+                    <div class="org-line" style="height: 30px;"></div>
+                    
+                    <div class="level-2" style="width: 100%;">
+                        <div class="org-node assistant-manager" onclick="showDetails('assistant')">
+                            <div class="position-title">مدير عام مساعد</div>
+                            <div class="manager-name">م/سارة محمد صالح</div>
+                        </div>
+                        <div class="org-node expert-manager" onclick="showDetails('expert')">
+                            <div class="position-title">مدير عام خبير</div>
+                            <div class="manager-name">أ/محمد عطية</div>
+                        </div>
                     </div>
-                    <div class="org-node region-manager pulse" onclick="showDetails('dakahlia')">
-                        <div class="position-title">منطقة الدقهلية</div>
-                        <div class="manager-name">أ/ماجد موسى</div>
+                    
+                    <div class="horizontal-line" style="width: 100%;"></div>
+                    
+                    <div class="level-3" style="width: 100%;">
+                        <div class="org-node department-manager" onclick="showDetails('safwat')">
+                            <div class="position-title">مدير مساعد</div>
+                            <div class="manager-name">أ/صفوت عويس</div>
+                        </div>
+                        <div class="org-node department-manager" onclick="showDetails('hussein')">
+                            <div class="position-title">مدير مساعد</div>
+                            <div class="manager-name">أ/حسين سعيد</div>
+                        </div>
+                        <div class="org-node department-manager" onclick="showDetails('sami')">
+                            <div class="position-title">مدير مساعد</div>
+                            <div class="manager-name">أ/سامي عبدالمعبود</div>
+                        </div>
+                        <div class="org-node department-manager" onclick="showDetails('hq')">
+                            <div class="position-title">المبنى الرئيس والمكتب الفني</div>
+                            <!-- --- NAME UPDATE --- -->
+                            <div class="manager-name">أ/محمد كمال</div>
+                        </div>
                     </div>
-                </div>
-                
-                <!-- Regions under Hussein Saeed -->
-                <div class="region-group">
-                    <div class="org-node region-manager pulse" onclick="showDetails('eastnile')">
-                        <div class="position-title">منطقة شرق النيل</div>
-                        <div class="manager-name">أ/وليد محي</div>
-                    </div>
-                    <div class="org-node region-manager pulse" onclick="showDetails('gharbia')">
-                        <div class="position-title">منطقة الغربية</div>
-                        <div class="manager-name">أ/مجدي صالح</div>
-                    </div>
-                    <div class="org-node region-manager pulse" onclick="showDetails('alex')">
-                        <div class="position-title">منطقة الإسكندرية</div>
-                        <div class="manager-name">أ/أسامة جلال</div>
+                    
+                    <div class="horizontal-line" style="width: 100%;"></div>
+                    
+                    <div class="level-4" style="width: 100%;">
+                        <!-- Regions under Safwat Oweis -->
+                        <div class="region-group">
+                            <div class="org-node region-manager pulse" onclick="showDetails('warraq')">
+                                <div class="position-title">منطقة الوراق</div>
+                                <div class="manager-name">أ/جمال عبدالظاهر</div>
+                            </div>
+                            <div class="org-node region-manager pulse" onclick="showDetails('saeed')">
+                                <div class="position-title">منطقة الصعيد</div>
+                                <div class="manager-name">أ/محمود عبدالسلام</div>
+                            </div>
+                            <div class="org-node region-manager pulse" onclick="showDetails('dakahlia')">
+                                <div class="position-title">منطقة الدقهلية</div>
+                                <div class="manager-name">أ/ماجد موسى</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Regions under Hussein Saeed -->
+                        <div class="region-group">
+                            <div class="org-node region-manager pulse" onclick="showDetails('eastnile')">
+                                <div class="position-title">منطقة شرق النيل</div>
+                                <div class="manager-name">أ/وليد محي</div>
+                            </div>
+                            <div class="org-node region-manager pulse" onclick="showDetails('gharbia')">
+                                <div class="position-title">منطقة الغربية</div>
+                                <div class="manager-name">أ/مجدي صالح</div>
+                            </div>
+                            <div class="org-node region-manager pulse" onclick="showDetails('alex')">
+                                <div class="position-title">منطقة الإسكندرية</div>
+                                <div class="manager-name">أ/أسامة جلال</div>
+                            </div>
+                        </div>
+
+                        <!-- Region under Sami Abdel-Maaboud -->
+                        <div class="region-group">
+                             <div class="org-node region-manager pulse" onclick="showDetails('menofia')">
+                                <div class="position-title">منطقة المنوفية</div>
+                                <div class="manager-name">أ/إسماعيل</div>
+                            </div>
+                        </div>
+
+                        <!-- Placeholder for Main Building's column -->
+                        <div class="region-group">
+                        </div>
                     </div>
                 </div>
 
-                <!-- Region under Sami Abdel-Maaboud -->
-                <div class="region-group">
-                     <div class="org-node region-manager pulse" onclick="showDetails('menofia')">
-                        <div class="position-title">منطقة المنوفية</div>
-                        <div class="manager-name">أ/إسماعيل</div>
+                <!-- NEW Department Column (NOW ON THE RIGHT) -->
+                <div class="department-column">
+                    <div class="org-line" style="height: 20px;"></div>
+                    <div class="org-node" style="background: linear-gradient(135deg, #6c757d, #343a40);">
+                        <div class="position-title" style="color: white;">بيانات العملاء</div>
+                    </div>
+                    <div class="org-line" style="height: 20px;"></div>
+                    <div class="org-node" style="border-style: dashed; padding: 30px;">
+                        <div class="position-title">سيتم إضافة البيانات قريباً</div>
                     </div>
                 </div>
 
-                <!-- Placeholder for Main Building's column -->
-                <div class="region-group">
-                </div>
             </div>
         </div>
     </div>
@@ -416,7 +465,8 @@
                 safwat: 'مدير مساعد: أ/صفوت عويس - يشرف على مناطق الوراق، الصعيد، والدقهلية',
                 hussein: 'مدير مساعد: أ/حسين سعيد - يشرف على مناطق شرق النيل، الغربية، والإسكندرية',
                 sami: 'مدير مساعد: أ/سامي عبدالمعبود - يشرف على منطقة المنوفية',
-                hq: 'المبنى الرئيس والمكتب الفني',
+                // --- JAVASCRIPT UPDATE ---
+                hq: 'المبنى الرئيس والمكتب الفني: أ/محمد كمال',
                 warraq: 'مدير منطقة الوراق: أ/جمال عبدالظاهر',
                 saeed: 'مدير منطقة الصعيد: أ/محمود عبدالسلام',
                 dakahlia: 'مدير منطقة الدقهلية: أ/ماجد موسى',
