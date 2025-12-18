@@ -1,546 +1,424 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>رؤية 2026 - إدارة المساحة وبيانات العملاء</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
-        
-        :root {
-            /* Night Mode Colors */
-            --bg-color: #000015;
-            --text-color: white;
-            --main-title-gradient: linear-gradient(45deg, #a8edea, #fed6e3, #ffffff);
-            --chart-bg: rgba(10, 25, 47, 0.3);
-            --chart-border: rgba(0, 191, 255, 0.3);
-            --chart-shadow: 0 0 40px rgba(0, 191, 255, 0.2);
-            --node-bg: rgba(20, 40, 70, 0.5);
-            --node-border: rgba(0, 191, 255, 0.5);
-            --node-shadow: 0 0 10px rgba(0, 191, 255, 0.3), inset 0 0 15px rgba(0, 191, 255, 0.2);
-            --node-hover-bg: rgba(30, 50, 90, 0.7);
-            --node-hover-border: rgba(137, 207, 240, 0.8);
-            --node-hover-shadow: 0 0 25px rgba(0, 191, 255, 0.6), inset 0 0 20px rgba(0, 191, 255, 0.3);
-            --line-gradient: linear-gradient(to bottom, rgba(0, 191, 255, 0.8), rgba(0, 191, 255, 0.2));
-            --horizontal-line-gradient: linear-gradient(to right, rgba(0, 191, 255, 0.2), rgba(0, 191, 255, 0.8), rgba(0, 191, 255, 0.2));
-            --year-badge-bg: rgba(255, 255, 255, 0.1);
-            --year-badge-border: rgba(0, 191, 255, 0.5);
-            --year-badge-shadow: 0 0 15px rgba(0, 191, 255, 0.4);
-        }
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Babel for JSX in Browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-        body.light-mode {
-            /* Light Mode Colors */
-            --bg-color: #f0f4f8;
-            --text-color: #1a202c;
-            --main-title-gradient: linear-gradient(45deg, #2a6fdb, #764ba2);
-            --chart-bg: rgba(255, 255, 255, 0.6);
-            --chart-border: rgba(0, 0, 0, 0.1);
-            --chart-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            --node-bg: rgba(255, 255, 255, 0.7);
-            --node-border: rgba(0, 0, 0, 0.2);
-            --node-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            --node-hover-bg: rgba(255, 255, 255, 1);
-            --node-hover-border: #2a6fdb;
-            --node-hover-shadow: 0 10px 20px rgba(42, 111, 219, 0.2);
-            --line-gradient: linear-gradient(to bottom, #a0aec0, #e2e8f0);
-            --horizontal-line-gradient: linear-gradient(to right, #e2e8f0, #a0aec0, #e2e8f0);
-            --year-badge-bg: rgba(0, 0, 0, 0.05);
-            --year-badge-border: rgba(0, 0, 0, 0.1);
-            --year-badge-shadow: none;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+    <style>
         body {
             font-family: 'Tajawal', sans-serif;
-            background-color: var(--bg-color);
-            min-height: 100vh;
-            overflow-x: auto;
-            position: relative;
-            color: var(--text-color);
+            background-color: #000015;
+            color: white;
             transition: background-color 0.5s ease, color 0.5s ease;
+            margin: 0;
+            overflow-x: hidden;
         }
-
-        #starfield {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1;
-            transition: opacity 0.5s ease;
+        .light-mode {
+            background-color: #f0f4f8;
+            color: #1a202c;
         }
-
-        body.light-mode #starfield {
-            opacity: 0;
-        }
-
-        .theme-switcher {
-            position: fixed;
-            top: 20px; left: 20px; z-index: 1000;
-            cursor: pointer;
-            background-color: rgba(128, 128, 128, 0.2);
-            border-radius: 50px; padding: 8px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .theme-switcher .icon {
-            font-size: 24px;
-            transition: transform 0.3s ease;
-        }
-
-        body.light-mode .theme-switcher .icon {
-             transform: rotate(180deg);
-        }
-        
-        .dashboard-container {
-            padding: 20px;
-            max-width: 1800px; /* Increased max-width for the wider scene */
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            color: var(--text-color);
-            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .main-title {
-            font-size: 2.8rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            background: var(--main-title-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: text-flicker 4s infinite alternate;
-        }
-
         @keyframes text-flicker {
             0% { opacity: 0.8; text-shadow: 0 0 10px #a8edea; }
             50% { opacity: 1; text-shadow: 0 0 20px #fed6e3; }
             100% { opacity: 0.9; text-shadow: 0 0 15px #ffffff; }
         }
-        body.light-mode .main-title {
-            animation: none; /* Turn off flicker in light mode */
-        }
-        
-        .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-        
-        .year-badge {
-            display: inline-block;
-            background: var(--year-badge-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--year-badge-border);
-            padding: 8px 20px;
-            border-radius: 50px;
-            margin-top: 15px;
-            font-weight: 500;
-            box-shadow: var(--year-badge-shadow);
-            transition: all 0.5s ease;
-        }
-        
-        .org-chart {
-            background: var(--chart-bg);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid var(--chart-border);
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: var(--chart-shadow);
-            transition: all 0.5s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .org-chart::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 20px;
-            background: radial-gradient(circle at 50% 50%, transparent, rgba(0, 191, 255, 0.2));
-            animation: rotate-glow 10s linear infinite;
-            pointer-events: none;
-            transition: opacity 0.5s ease;
-        }
-
-        body.light-mode .org-chart::before {
-            opacity: 0; /* Hide glow in light mode */
-        }
-
-        @keyframes rotate-glow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        .org-node {
-            background: var(--node-bg);
-            border: 2px solid var(--node-border);
-            border-radius: 15px; padding: 15px 25px; margin: 10px;
-            text-align: center; color: var(--text-color);
-            font-weight: 500; transition: all 0.3s ease;
-            cursor: pointer; position: relative; overflow: hidden;
-            box-shadow: var(--node-shadow);
-        }
-        
-        .org-node:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: var(--node-hover-shadow);
-            background: var(--node-hover-bg);
-            border-color: var(--node-hover-border);
-        }
-        
-        .ceo { font-size: 1.1rem; }
-        .assistant-manager, .expert-manager { font-size: 1rem; }
-        .department-manager { font-size: 0.9rem; }
-        /* --- SIZE REDUCTION --- */
-        .region-manager { 
-            font-size: 0.8rem; 
-            padding: 12px 18px;
-        }
-
-        .ceo { background-image: linear-gradient(135deg, #483D8B, #00008B); color: white; }
-        .assistant-manager { background-image: linear-gradient(135deg, #8A2BE2, #4B0082); color: white; }
-        .expert-manager { background-image: linear-gradient(135deg, #00CED1, #20B2AA); color: white; }
-        .department-manager { background-image: linear-gradient(135deg, #4682B4, #1E90FF); color: white; }
-        .region-manager { background-image: linear-gradient(135deg, #5F9EA0, #008B8B); color: white; }
-        
-        body.light-mode .org-node { color: #1a202c; }
-        body.light-mode .ceo { background-image: linear-gradient(135deg, #667eea, #764ba2); color: white; }
-        body.light-mode .assistant-manager { background-image: linear-gradient(135deg, #f093fb, #f5576c); color: white; }
-        body.light-mode .expert-manager { background-image: linear-gradient(135deg, #4facfe, #00f2fe); color: white; }
-        body.light-mode .department-manager { background-image: linear-gradient(135deg, #43e97b, #38f9d7); color: #1a202c; }
-        body.light-mode .region-manager { background-image: linear-gradient(135deg, #fa709a, #fee140); color: #1a202c; }
-
-        .org-line {
-            width: 2px;
-            background: var(--line-gradient);
-            margin: 0 auto;
-            position: relative;
-        }
-        
-        .horizontal-line {
-            height: 2px;
-            background: var(--horizontal-line-gradient);
-            margin: 5px 0;
-        }
-        
-        .level-1 { display: flex; justify-content: center; }
-        .level-2 { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
-        .level-3 { display: flex; justify-content: space-around; flex-wrap: wrap; margin: 20px 0; }
-        .level-4 { display: flex; justify-content: space-around; align-items: flex-start; flex-wrap: wrap; margin-top: 20px;}
-        
-        .region-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0 10px;
-            position: relative;
-            min-width: 180px; /* Reduced min-width to accommodate smaller cards */
-        }
-
-        .region-group::before {
-            content: '';
-            position: absolute;
-            top: -20px;
-            height: 20px;
-            width: 2px;
-            background: var(--line-gradient);
-        }
-        
-        .pulse {
-            animation: pulse-glow 2.5s infinite;
-        }
-        
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 10px rgba(0, 191, 255, 0.3), inset 0 0 15px rgba(0, 191, 255, 0.2); }
-            50% { box-shadow: 0 0 20px rgba(137, 207, 240, 0.6), inset 0 0 25px rgba(137, 207, 240, 0.4); }
-            100% { box-shadow: 0 0 10px rgba(0, 191, 255, 0.3), inset 0 0 15px rgba(0, 191, 255, 0.2); }
-        }
-
-        body.light-mode .pulse {
-            animation: none;
-        }
-        
-        .floating {
-            animation: floating 4s ease-in-out infinite;
-        }
-        
+        .flicker { animation: text-flicker 4s infinite alternate; }
+        .floating { animation: floating 4s ease-in-out infinite; }
         @keyframes floating {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-8px); }
             100% { transform: translateY(0px); }
         }
-
-        /* New styles for two-department layout */
-        .main-departments-container {
-            display: flex;
-            justify-content: space-around;
-            align-items: flex-start;
-            flex-wrap: wrap;
+        .pulse { animation: pulse-glow 2.5s infinite; }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 10px rgba(0, 191, 255, 0.3), inset 0 0 15px rgba(0, 191, 255, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(137, 207, 240, 0.6), inset 0 0 25px rgba(137, 207, 240, 0.4); }
+            100% { box-shadow: 0 0 10px rgba(0, 191, 255, 0.3), inset 0 0 15px rgba(0, 191, 255, 0.2); }
         }
-
-        .department-column {
-            flex: 1;
-            min-width: 500px; /* Minimum width for each department block */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0 15px;
-        }
-        
-        @media (max-width: 1200px) {
-            .department-column {
-                min-width: 90%;
-                margin-bottom: 40px;
-            }
-        }
-
-        @media (max-width: 992px) {
-            .level-3, .level-4 {
-                flex-direction: column;
-                align-items: center;
-            }
-            .region-group {
-                margin-bottom: 20px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .main-title { font-size: 1.8rem; }
-            .level-2 { flex-direction: column; align-items: center; }
-            .org-chart { padding: 20px; }
-        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        .light-mode ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); }
     </style>
+
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom": "https://esm.sh/react-dom@18.2.0/client",
+        "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+        "firebase/database": "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"
+      }
+    }
+    </script>
+<link rel="stylesheet" href="/index.css">
 </head>
 <body>
-    <canvas id="starfield"></canvas>
-    
-    <div class="theme-switcher" onclick="toggleTheme()">
-        <span class="icon">🌙</span>
-    </div>
+    <div id="root"></div>
 
-    <div class="dashboard-container">
-        <header class="header">
-            <h1 class="main-title"> إدارة المساحة وبيانات العملاء</h1>
-            <p class="subtitle">الهيكل التنظيمي</p>
-            <div class="year-badge pulse">2026</div>
-        </header>
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef } from 'react';
+        import ReactDOM from 'react-dom';
+        import { initializeApp } from 'firebase/app';
+        import { getDatabase, ref, onValue, set } from 'firebase/database';
 
-        <div class="org-chart">
-            <div class="level-1">
-                <div class="org-node ceo floating" onclick="showDetails('ceo')">
-                    <div class="position-title">المدير العام</div>
-                    <div class="manager-name">أ/عبدالعزيز العوامي</div>
-                </div>
-            </div>
-            
-            <div class="org-line" style="height: 30px;"></div>
-            <div class="horizontal-line" style="width: 50%; margin: 0 auto;"></div>
+        // --- FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyCCnPJLH1IYwUf1iv5nL52diHXXUlfosIA",
+          authDomain: "issue-tracker-5d2a1.firebaseapp.com",
+          databaseURL: "https://issue-tracker-5d2a1-default-rtdb.firebaseio.com",
+          projectId: "issue-tracker-5d2a1",
+          storageBucket: "issue-tracker-5d2a1.firebasestorage.app",
+          messagingSenderId: "883603835871",
+          appId: "1:883603835871:web:f3af7423d128feafa0926a",
+          measurementId: "G-3KXLNXZW4N"
+        };
 
-            <!-- Container for the main department branches -->
-            <div class="main-departments-container">
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-                <!-- EXISTING Survey Department Column (NOW ON THE LEFT) -->
-                <div class="department-column">
-                    <div class="org-line" style="height: 20px;"></div>
-                    <div class="org-node" style="background: linear-gradient(135deg, #008B8B, #48D1CC);">
-                        <div class="position-title" style="color: white;">إدارة المساحة والخرائط</div>
-                    </div>
-                    
-                    <div class="org-line" style="height: 30px;"></div>
-                    
-                    <div class="level-2" style="width: 100%;">
-                        <div class="org-node assistant-manager" onclick="showDetails('assistant')">
-                            <div class="position-title">مدير عام مساعد</div>
-                            <div class="manager-name">م/سارة محمد صالح</div>
-                        </div>
-                        <div class="org-node expert-manager" onclick="showDetails('expert')">
-                            <div class="position-title">مدير عام خبير</div>
-                            <div class="manager-name">أ/محمد عطية</div>
-                        </div>
-                    </div>
-                    
-                    <div class="horizontal-line" style="width: 100%;"></div>
-                    
-                    <div class="level-3" style="width: 100%;">
-                        <div class="org-node department-manager" onclick="showDetails('safwat')">
-                            <div class="position-title">مدير مساعد</div>
-                            <div class="manager-name">أ/صفوت عويس</div>
-                        </div>
-                        <div class="org-node department-manager" onclick="showDetails('hussein')">
-                            <div class="position-title">مدير مساعد</div>
-                            <div class="manager-name">أ/حسين سعيد</div>
-                        </div>
-                        <div class="org-node department-manager" onclick="showDetails('sami')">
-                            <div class="position-title">مدير مساعد</div>
-                            <div class="manager-name">أ/سامي عبدالمعبود</div>
-                        </div>
-                        <div class="org-node department-manager" onclick="showDetails('hq')">
-                            <div class="position-title">المبنى الرئيس والمكتب الفني</div>
-                            <!-- --- NAME UPDATE --- -->
-                            <div class="manager-name">أ/محمد كمال</div>
-                        </div>
-                    </div>
-                    
-                    <div class="horizontal-line" style="width: 100%;"></div>
-                    
-                    <div class="level-4" style="width: 100%;">
-                        <!-- Regions under Safwat Oweis -->
-                        <div class="region-group">
-                            <div class="org-node region-manager pulse" onclick="showDetails('warraq')">
-                                <div class="position-title">منطقة الوراق</div>
-                                <div class="manager-name">أ/جمال عبدالظاهر</div>
-                            </div>
-                            <div class="org-node region-manager pulse" onclick="showDetails('saeed')">
-                                <div class="position-title">منطقة الصعيد</div>
-                                <div class="manager-name">أ/محمود عبدالسلام</div>
-                            </div>
-                            <div class="org-node region-manager pulse" onclick="showDetails('dakahlia')">
-                                <div class="position-title">منطقة الدقهلية</div>
-                                <div class="manager-name">أ/ماجد موسى</div>
-                            </div>
-                        </div>
-                        
-                        <!-- Regions under Hussein Saeed -->
-                        <div class="region-group">
-                            <div class="org-node region-manager pulse" onclick="showDetails('eastnile')">
-                                <div class="position-title">منطقة شرق النيل</div>
-                                <div class="manager-name">أ/وليد محي</div>
-                            </div>
-                            <div class="org-node region-manager pulse" onclick="showDetails('gharbia')">
-                                <div class="position-title">منطقة الغربية</div>
-                                <div class="manager-name">أ/مجدي صالح</div>
-                            </div>
-                            <div class="org-node region-manager pulse" onclick="showDetails('alex')">
-                                <div class="position-title">منطقة الإسكندرية</div>
-                                <div class="manager-name">أ/أسامة جلال</div>
-                            </div>
-                        </div>
-
-                        <!-- Region under Sami Abdel-Maaboud -->
-                        <div class="region-group">
-                             <div class="org-node region-manager pulse" onclick="showDetails('menofia')">
-                                <div class="position-title">منطقة المنوفية</div>
-                                <div class="manager-name">أ/إسماعيل</div>
-                            </div>
-                        </div>
-
-                        <!-- Placeholder for Main Building's column -->
-                        <div class="region-group">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- NEW Department Column (NOW ON THE RIGHT) -->
-                <div class="department-column">
-                    <div class="org-line" style="height: 20px;"></div>
-                    <div class="org-node" style="background: linear-gradient(135deg, #6c757d, #343a40);">
-                        <div class="position-title" style="color: white;">بيانات العملاء</div>
-                    </div>
-                    <div class="org-line" style="height: 20px;"></div>
-                    <div class="org-node" style="border-style: dashed; padding: 30px;">
-                        <div class="position-title">سيتم إضافة البيانات قريباً</div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function showDetails(role) {
-            const details = {
-                ceo: 'المدير العام: أ/عبدالعزيز العوامي - القائد الاستراتيجي للإدارة',
-                assistant: 'مدير عام مساعد: م/سارة محمد صالح - مسؤولة عن العمليات التشغيلية والتطوير',
-                expert: 'مدير عام خبير: أ/محمد عطية - مسؤول متابعة تقدم سير الأعمال والتنسيق بين المديرين ',
-                safwat: 'مدير مساعد: أ/صفوت عويس - يشرف على مناطق الوراق، الصعيد، والدقهلية',
-                hussein: 'مدير مساعد: أ/حسين سعيد - يشرف على مناطق شرق النيل، الغربية، والإسكندرية',
-                sami: 'مدير مساعد: أ/سامي عبدالمعبود - يشرف على منطقة المنوفية',
-                // --- JAVASCRIPT UPDATE ---
-                hq: 'المبنى الرئيس والمكتب الفني: أ/محمد كمال',
-                warraq: 'مدير منطقة الوراق: أ/جمال عبدالظاهر',
-                saeed: 'مدير منطقة الصعيد: أ/محمود عبدالسلام',
-                dakahlia: 'مدير منطقة الدقهلية: أ/ماجد موسى',
-                eastnile: 'مدير منطقة شرق النيل: أ/وليد محي',
-                gharbia: 'مدير منطقة الغربية: أ/مجدي صالح',
-                alex: 'مدير منطقة الإسكندرية: أ/أسامة جلال',
-                menofia: 'مدير منطقة المنوفية: أ/إسماعيل'
-            };
-            
-            alert(details[role] || 'معلومات المنصب');
-        }
-
-        function toggleTheme() {
-            const body = document.body;
-            body.classList.toggle('light-mode');
-
-            const icon = document.querySelector('.theme-switcher .icon');
-            if (body.classList.contains('light-mode')) {
-                icon.textContent = '☀️';
-            } else {
-                icon.textContent = '🌙';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const canvas = document.getElementById('starfield');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-
-            function resizeCanvas() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            window.addEventListener('resize', resizeCanvas);
-            resizeCanvas();
-
-            const stars = [];
-            const numStars = 200;
-
-            for (let i = 0; i < numStars; i++) {
-                stars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    radius: Math.random() * 1.5 + 0.5,
-                    vx: Math.random() * 0.1 - 0.05,
-                    vy: Math.random() * 0.1 - 0.05,
-                    opacity: Math.random() * 0.5 + 0.5
-                });
-            }
-
-            function draw() {
-                if(document.body.classList.contains('light-mode')) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                } else {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = '#FFF';
-                    stars.forEach(star => {
-                        ctx.beginPath();
-                        ctx.globalAlpha = star.opacity;
-                        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-                        ctx.fill();
-
-                        star.x += star.vx;
-                        star.y += star.vy;
-
-                        if (star.x < 0 || star.x > canvas.width) star.vx = -star.vx;
-                        if (star.y < 0 || star.y > canvas.height) star.vy = -star.vy;
-                    });
+        // --- CONSTANTS ---
+        const INITIAL_ORG_DATA = {
+          ceo: {
+            id: 'ceo',
+            role: 'المدير العام',
+            name: 'أ/ عبدالعزيز العوامي',
+            description: 'المدير العام: أ/ عبدالعزيز العوامي - القائد الاستراتيجي للإدارة',
+            colorClass: 'bg-gradient-to-br from-[#483D8B] to-[#00008B]'
+          },
+          expert: {
+            id: 'expert',
+            role: 'مدير عام خبير',
+            name: 'م/ محمد عطية',
+            description: 'مدير عام خبير: م/ محمد عطية - مسؤول متابعة تقدم سير الأعمال والتنسيق بين المديرين',
+            colorClass: 'bg-gradient-to-br from-[#00CED1] to-[#20B2AA]'
+          },
+          assistant: {
+            id: 'assistant',
+            role: 'مدير عام مساعد',
+            name: 'م/ سارة محمد صالح',
+            description: 'مدير عام مساعد: م/ سارة محمد صالح - مسؤولة عن العمليات التشغيلية والتطوير',
+            colorClass: 'bg-gradient-to-br from-[#8A2BE2] to-[#4B0082]'
+          },
+          technical: {
+            id: 'technical',
+            role: 'المكتب الفني',
+            name: 'م/ محمد كمال',
+            description: 'المبنى الرئيس والمكتب الفني: م/ محمد كمال',
+            colorClass: 'bg-gradient-to-br from-[#4682B4] to-[#1E90FF]'
+          },
+          subManagers: [
+            {
+              id: 'sami',
+              role: 'مدير مساعد',
+              name: 'أ/ سامي عبدالمعبود',
+              description: 'مدير مساعد: أ/ سامي عبدالمعبود - يشرف على منطقة المنوفية',
+              colorClass: 'bg-gradient-to-br from-[#3b82f6] to-[#2563eb]',
+              regions: [
+                { 
+                  id: 'menofia', 
+                  role: 'منطقة المنوفية', 
+                  name: 'أ/ إسماعيل', 
+                  description: 'مدير منطقة المنوفية: أ/ إسماعيل', 
+                  colorClass: 'bg-gradient-to-br from-[#5F9EA0] to-[#008B8B]',
+                  stats: { total: 120, egyptGas: 80, institution: 40, pcCount: 55 },
+                  architecture: {
+                    supervisor: 'أ/ إسماعيل',
+                    dataEntry: { role: 'مشرف إدخال', name: 'قيد التعيين' },
+                    recordingUpload: { role: 'مشرف رفع تسجيلي', name: 'قيد التعيين' },
+                    surveyingUpload: { role: 'مشرف رفع مساحي', name: 'قيد التعيين' }
+                  }
                 }
-                requestAnimationFrame(draw);
+              ]
+            },
+            {
+              id: 'hussein',
+              role: 'مدير مساعد',
+              name: 'أ/ حسين سعيد',
+              description: 'مدير مساعد: أ/ حسين سعيد',
+              colorClass: 'bg-gradient-to-br from-[#3b82f6] to-[#2563eb]',
+              regions: [
+                { 
+                  id: 'eastnile', 
+                  role: 'منطقة شرق النيل', 
+                  name: 'أ/ وليد محي', 
+                  colorClass: 'bg-gradient-to-br from-[#5F9EA0] to-[#008B8B]',
+                  stats: { total: 200, egyptGas: 130, institution: 70, pcCount: 90 },
+                  architecture: {
+                    supervisor: 'أ/ وليد محي',
+                    dataEntry: { role: 'مشرف إدخال', name: 'قيد التعيين' },
+                    recordingUpload: { role: 'مشرف رفع تسجيلي', name: 'قيد التعيين' },
+                    surveyingUpload: { role: 'مشرف رفع مساحي', name: 'قيد التعيين' }
+                  }
+                },
+                { 
+                  id: 'gharbia', 
+                  role: 'منطقة الغربية', 
+                  name: 'أ/ مجدي صالح', 
+                  colorClass: 'bg-gradient-to-br from-[#5F9EA0] to-[#008B8B]',
+                  stats: { total: 150, egyptGas: 100, institution: 50, pcCount: 65 },
+                  architecture: {
+                    supervisor: 'أ/ مجدي صالح',
+                    dataEntry: { role: 'مشرف إدخال', name: 'قيد التعيين' },
+                    recordingUpload: { role: 'مشرف رفع تسجيلي', name: 'قيد التعيين' },
+                    surveyingUpload: { role: 'مشرف رفع مساحي', name: 'قيد التعيين' }
+                  }
+                }
+              ]
+            },
+            {
+              id: 'safwat',
+              role: 'مدير مساعد',
+              name: 'أ/ صفوت عويس',
+              description: 'مدير مساعد: أ/ صفوت عويس',
+              colorClass: 'bg-gradient-to-br from-[#3b82f6] to-[#2563eb]',
+              regions: [
+                { 
+                  id: 'dakahlia', 
+                  role: 'منطقة الدقهلية', 
+                  name: 'أ/ ماجد موسى', 
+                  colorClass: 'bg-gradient-to-br from-[#5F9EA0] to-[#008B8B]',
+                  stats: { total: 180, egyptGas: 120, institution: 60, pcCount: 80 },
+                  architecture: {
+                    supervisor: 'م/ ماجد موسى',
+                    dataEntry: { role: 'مشرف إدخال', name: 'قيد التعيين' },
+                    recordingUpload: { role: 'مشرف رفع تسجيلي', name: 'قيد التعيين' },
+                    surveyingUpload: { role: 'مشرف رفع مساحي', name: 'قيد التعيين' }
+                  }
+                }
+              ]
             }
+          ]
+        };
 
-            draw();
-        });
+        // --- COMPONENTS ---
+
+        const OrgNode = ({ manager, onClick, className = "", pulse = false, floating = false, compact = false }) => (
+          <div 
+            onClick={() => onClick && onClick(manager)}
+            className={`
+              org-node cursor-pointer rounded-2xl text-center shadow-lg border border-white/20 hover:scale-105 hover:border-white/50 transition-all duration-300
+              ${manager.colorClass} ${pulse ? 'pulse' : ''} ${floating ? 'floating' : ''} ${className}
+              ${compact ? 'p-2 min-w-[120px]' : 'p-4 min-w-[180px]'} flex flex-col items-center justify-center
+            `}
+            style={{ boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)' }}
+          >
+            <div className={`${compact ? 'text-xs' : 'text-sm'} font-bold text-white/80`}>{manager.role}</div>
+            <div className={`${compact ? 'text-sm' : 'text-lg'} font-bold text-white mt-1 leading-tight`}>{manager.name}</div>
+          </div>
+        );
+
+        const ArchitectureModal = ({ manager, onClose, onSave, theme }) => {
+          const [localArch, setLocalArch] = useState(null);
+          useEffect(() => { if (manager?.architecture) setLocalArch({ ...manager.architecture }); }, [manager]);
+          if (!manager || !localArch) return null;
+
+          const handlePersonnelChange = (field, value) => {
+            setLocalArch(prev => ({ ...prev, [field]: { ...prev[field], name: value } }));
+          };
+
+          const isDark = theme === 'dark';
+
+          return (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/90 backdrop-blur-xl animate-in fade-in duration-300" onClick={onClose} />
+              <div className={`relative w-full max-w-4xl overflow-hidden border rounded-[3rem] shadow-2xl p-0 animate-in zoom-in-95 slide-in-from-top-12 duration-500 ${isDark ? 'bg-slate-900/95 text-white border-white/10' : 'bg-white/95 text-slate-900 border-slate-200'}`}>
+                <div className="p-8 md:p-12 relative z-10">
+                  <header className="text-center mb-16">
+                     <h2 className="text-4xl font-black bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">{manager.role}</h2>
+                     <div className="h-1 w-24 bg-cyan-500/50 mx-auto mt-4 rounded-full" />
+                  </header>
+                  <div className="flex flex-col items-center gap-12">
+                    <div className="relative">
+                      <div className="px-10 py-6 bg-gradient-to-br from-indigo-600 to-blue-800 rounded-3xl text-center min-w-[280px]">
+                        <div className="text-xs font-bold text-white/60 mb-1">مشرف المنطقة</div>
+                        <div className="text-2xl font-black text-white">{localArch.supervisor}</div>
+                      </div>
+                      <div className="absolute left-1/2 -translate-x-1/2 top-full w-1 h-12 bg-cyan-500" />
+                    </div>
+                    <div className="relative w-full max-w-3xl">
+                       <div className="absolute top-[-1px] left-1/2 -translate-x-1/2 w-full h-[2px] bg-cyan-500" />
+                       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12">
+                          {['dataEntry', 'recordingUpload', 'surveyingUpload'].map((key) => (
+                            <div key={key} className="relative flex flex-col items-center">
+                               <div className="absolute top-[-48px] w-1 h-12 bg-cyan-500" />
+                               <div className="group w-full p-6 rounded-3xl bg-slate-800 border border-white/10">
+                                  <div className="text-[10px] font-bold text-white/50 mb-2">{localArch[key].role}</div>
+                                  <input type="text" value={localArch[key].name} onChange={(e) => handlePersonnelChange(key, e.target.value)} className="bg-transparent text-lg font-bold text-white focus:outline-none w-full border-b border-white/10 focus:border-cyan-400 pb-1" />
+                               </div>
+                            </div>
+                          ))}
+                       </div>
+                    </div>
+                  </div>
+                  <div className="mt-20 flex justify-center gap-4">
+                    <button onClick={() => onSave(manager.id, localArch)} className="px-12 py-5 bg-cyan-600 hover:bg-cyan-500 text-white font-black rounded-full transition-all">حفظ الهيكلية</button>
+                    <button onClick={onClose} className="px-12 py-5 bg-slate-700 hover:bg-slate-600 text-white font-black rounded-full transition-all">إغلاق</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const RegionModal = ({ manager, onClose, onSave, onOpenArch, theme }) => {
+          const [localStats, setLocalStats] = useState(null);
+          useEffect(() => { if (manager?.stats) setLocalStats({ ...manager.stats }); }, [manager]);
+          if (!manager || !localStats) return null;
+
+          const handleChange = (field, value) => {
+            setLocalStats(prev => ({ ...prev, [field]: parseInt(value) || 0 }));
+          };
+
+          const isDark = theme === 'dark';
+
+          return (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
+              <div className={`relative w-full max-w-lg overflow-hidden border rounded-[2.5rem] p-8 animate-in zoom-in-95 ${isDark ? 'bg-slate-900 text-white border-white/10' : 'bg-white text-slate-900 border-slate-200'}`}>
+                <h2 className="text-3xl font-bold mb-6 text-center">{manager.role}</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold opacity-60">إجمالي العدد</label>
+                    <input type="number" value={localStats.total} onChange={(e) => handleChange('total', e.target.value)} className="w-full bg-slate-800 text-white p-4 rounded-xl mt-1 border border-white/10 focus:border-cyan-400 outline-none" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold opacity-60">غاز مصر</label>
+                      <input type="number" value={localStats.egyptGas} onChange={(e) => handleChange('egyptGas', e.target.value)} className="w-full bg-slate-800 text-white p-4 rounded-xl mt-1 border border-white/10 outline-none" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold opacity-60">المؤسسة</label>
+                      <input type="number" value={localStats.institution} onChange={(e) => handleChange('institution', e.target.value)} className="w-full bg-slate-800 text-white p-4 rounded-xl mt-1 border border-white/10 outline-none" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold opacity-60">أجهزة الكمبيوتر</label>
+                    <input type="number" value={localStats.pcCount} onChange={(e) => handleChange('pcCount', e.target.value)} className="w-full bg-slate-800 text-white p-4 rounded-xl mt-1 border border-white/10 outline-none" />
+                  </div>
+                </div>
+                <div className="mt-8 flex gap-4">
+                  <button onClick={() => onSave(manager.id, localStats)} className="flex-1 py-4 bg-cyan-600 rounded-xl font-bold text-white">حفظ</button>
+                  <button onClick={() => onOpenArch(manager)} className="flex-1 py-4 bg-slate-700 rounded-xl font-bold text-white">عرض الهيكل</button>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const App = () => {
+          const [theme, setTheme] = useState('dark');
+          const [orgData, setOrgData] = useState(INITIAL_ORG_DATA);
+          const [loading, setLoading] = useState(true);
+          const [selectedManager, setSelectedManager] = useState(null);
+          const [archManager, setArchManager] = useState(null);
+
+          useEffect(() => {
+            const dataRef = ref(db, 'orgData');
+            onValue(dataRef, (snapshot) => {
+              const data = snapshot.val();
+              if (data) setOrgData(data);
+              else set(dataRef, INITIAL_ORG_DATA);
+              setLoading(false);
+            });
+          }, []);
+
+          const handleSaveStats = (id, newStats) => {
+            const updated = { ...orgData };
+            updated.subManagers = updated.subManagers.map(sub => ({
+              ...sub, regions: sub.regions?.map(reg => reg.id === id ? { ...reg, stats: newStats } : reg)
+            }));
+            set(ref(db, 'orgData'), updated);
+            setSelectedManager(null);
+          };
+
+          const handleSaveArch = (id, newArch) => {
+            const updated = { ...orgData };
+            updated.subManagers = updated.subManagers.map(sub => ({
+              ...sub, regions: sub.regions?.map(reg => reg.id === id ? { ...reg, architecture: newArch } : reg)
+            }));
+            set(ref(db, 'orgData'), updated);
+            setArchManager(null);
+          };
+
+          if (loading) return <div className="h-screen flex items-center justify-center bg-[#000015] text-cyan-400">جاري الاتصال بالسحابة...</div>;
+
+          const isDark = theme === 'dark';
+          const lineClass = isDark ? 'border-white/20' : 'border-slate-300';
+          const bgLineClass = isDark ? 'bg-white/20' : 'bg-slate-300';
+
+          return (
+            <div className={`min-h-screen relative p-8 ${theme === 'light' ? 'light-mode' : ''}`}>
+              <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} className="fixed top-6 left-6 z-50 p-4 bg-white/10 rounded-full border border-white/20">{isDark ? '🌙' : '☀️'}</button>
+              
+              <RegionModal manager={selectedManager} onClose={() => setSelectedManager(null)} onSave={handleSaveStats} onOpenArch={(m) => { setSelectedManager(null); setArchManager(m); }} theme={theme} />
+              <ArchitectureModal manager={archManager} onClose={() => setArchManager(null)} onSave={handleSaveArch} theme={theme} />
+
+              <header className="text-center mb-16">
+                <h1 className="text-5xl font-black mb-2 flicker">إدارة المساحة وبيانات العملاء</h1>
+                <div className="inline-block bg-cyan-500/20 px-6 py-1 rounded-full text-cyan-400 font-bold pulse">رؤية 2026</div>
+              </header>
+
+              <div className="flex flex-col items-center gap-12 max-w-6xl mx-auto">
+                <OrgNode manager={orgData.ceo} floating onClick={(m) => alert(m.description)} className="ring-4 ring-indigo-500/30" />
+                
+                <div className="relative w-full">
+                  <div className={`absolute top-[-30px] left-1/2 -translate-x-1/2 w-[70%] h-[30px] border-x-2 border-t-2 rounded-t-3xl ${lineClass}`} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-4 relative">
+                    <div className="flex flex-col items-center relative">
+                      <div className="flex items-start gap-4 flex-row-reverse">
+                        <OrgNode manager={orgData.assistant} onClick={(m) => alert(m.description)} />
+                        <div className="pt-10 flex flex-row-reverse items-center">
+                          <div className={`w-8 h-[2px] ${bgLineClass}`} />
+                          <OrgNode manager={orgData.technical} compact onClick={(m) => alert(m.description)} className="scale-90" />
+                        </div>
+                      </div>
+                      <div className={`w-[2px] h-20 bg-gradient-to-b from-purple-500 to-transparent mt-4`} />
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <OrgNode manager={orgData.expert} onClick={(m) => alert(m.description)} />
+                      <div className={`w-[2px] h-20 bg-gradient-to-b from-cyan-500 to-transparent mt-4`} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative w-full mt-[-20px]">
+                  <div className={`absolute top-[-40px] left-1/2 -translate-x-1/2 w-[80%] h-[40px] border-x-2 border-t-2 rounded-t-3xl ${lineClass}`} />
+                  <div className={`bg-white/5 backdrop-blur-xl border-2 border-green-500/30 rounded-3xl p-8 grid grid-cols-1 md:grid-cols-3 gap-8 ${!isDark ? 'bg-white/50' : ''}`}>
+                    {orgData.subManagers.map((sub, idx) => (
+                      <div key={sub.id} className="flex flex-col items-center">
+                        <OrgNode manager={sub} />
+                        <div className="mt-8 flex flex-wrap justify-center gap-3">
+                          {sub.regions?.map(region => (
+                            <OrgNode key={region.id} manager={region} compact onClick={setSelectedManager} className="scale-95 opacity-80 hover:opacity-100" />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>
