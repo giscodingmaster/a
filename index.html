@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -6,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>رؤية 2026 - إدارة المساحة وبيانات العملاء</title>
     
-    <!-- Tailwind CSS -->
+    <!-- External Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    
-    <!-- Babel for JSX in Browser -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
         body {
@@ -23,7 +22,6 @@
             background-color: #000015;
             color: white;
             transition: background-color 0.5s ease, color 0.5s ease;
-            margin: 0;
             overflow-x: hidden;
         }
         .light-mode {
@@ -35,61 +33,58 @@
             50% { opacity: 1; text-shadow: 0 0 20px #fed6e3; }
             100% { opacity: 0.9; text-shadow: 0 0 15px #ffffff; }
         }
-        .flicker { animation: text-flicker 4s infinite alternate; }
-        .floating { animation: floating 4s ease-in-out infinite; }
+        .flicker {
+            animation: text-flicker 4s infinite alternate;
+        }
+        .floating {
+            animation: floating 4s ease-in-out infinite;
+        }
         @keyframes floating {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-8px); }
             100% { transform: translateY(0px); }
         }
-        .pulse { animation: pulse-glow 2.5s infinite; }
+        .pulse {
+            animation: pulse-glow 2.5s infinite;
+        }
         @keyframes pulse-glow {
             0% { box-shadow: 0 0 10px rgba(0, 191, 255, 0.3), inset 0 0 15px rgba(0, 191, 255, 0.2); }
             50% { box-shadow: 0 0 20px rgba(137, 207, 240, 0.6), inset 0 0 25px rgba(137, 207, 240, 0.4); }
             100% { box-shadow: 0 0 10px rgba(0, 191, 255, 0.3), inset 0 0 15px rgba(0, 191, 255, 0.2); }
         }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-        .light-mode ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); }
+        /* Custom connectors */
+        .connector-line {
+            transition: border-color 0.5s ease, background-color 0.5s ease;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        /* Modal Animation */
+        .animate-in { animation: animateIn 0.3s ease-out forwards; }
+        @keyframes animateIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
     </style>
-
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom": "https://esm.sh/react-dom@18.2.0/client",
-        "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
-        "firebase/database": "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"
-      }
-    }
-    </script>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+  }
+}
+</script>
 <link rel="stylesheet" href="/index.css">
 </head>
 <body>
     <div id="root"></div>
 
-    <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useRef } from 'react';
-        import ReactDOM from 'react-dom';
-        import { initializeApp } from 'firebase/app';
-        import { getDatabase, ref, onValue, set } from 'firebase/database';
-
-        // --- FIREBASE CONFIGURATION ---
-        const firebaseConfig = {
-          apiKey: "AIzaSyCCnPJLH1IYwUf1iv5nL52diHXXUlfosIA",
-          authDomain: "issue-tracker-5d2a1.firebaseapp.com",
-          databaseURL: "https://issue-tracker-5d2a1-default-rtdb.firebaseio.com",
-          projectId: "issue-tracker-5d2a1",
-          storageBucket: "issue-tracker-5d2a1.firebasestorage.app",
-          messagingSenderId: "883603835871",
-          appId: "1:883603835871:web:f3af7423d128feafa0926a",
-          measurementId: "G-3KXLNXZW4N"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
 
         // --- CONSTANTS ---
         const INITIAL_ORG_DATA = {
@@ -149,13 +144,14 @@
               id: 'hussein',
               role: 'مدير مساعد',
               name: 'أ/ حسين سعيد',
-              description: 'مدير مساعد: أ/ حسين سعيد',
+              description: 'مدير مساعد: أ/ حسين سعيد - يشرف على مناطق شرق النيل، الغربية، والإسكندرية',
               colorClass: 'bg-gradient-to-br from-[#3b82f6] to-[#2563eb]',
               regions: [
                 { 
                   id: 'eastnile', 
                   role: 'منطقة شرق النيل', 
                   name: 'أ/ وليد محي', 
+                  description: 'مدير منطقة شرق النيل: أ/ وليد محي', 
                   colorClass: 'bg-gradient-to-br from-[#5F9EA0] to-[#008B8B]',
                   stats: { total: 200, egyptGas: 130, institution: 70, pcCount: 90 },
                   architecture: {
@@ -169,10 +165,25 @@
                   id: 'gharbia', 
                   role: 'منطقة الغربية', 
                   name: 'أ/ مجدي صالح', 
+                  description: 'مدير منطقة الغربية: أ/ مجدي صالح', 
                   colorClass: 'bg-gradient-to-br from-[#5F9EA0] to-[#008B8B]',
                   stats: { total: 150, egyptGas: 100, institution: 50, pcCount: 65 },
                   architecture: {
                     supervisor: 'أ/ مجدي صالح',
+                    dataEntry: { role: 'مشرف إدخال', name: 'قيد التعيين' },
+                    recordingUpload: { role: 'مشرف رفع تسجيلي', name: 'قيد التعيين' },
+                    surveyingUpload: { role: 'مشرف رفع مساحي', name: 'قيد التعيين' }
+                  }
+                },
+                { 
+                  id: 'alex', 
+                  role: 'منطقة الإسكندرية', 
+                  name: 'أ/ أسامة جلال', 
+                  description: 'مدير منطقة الإسكندرية: أ/ أسامة جلال', 
+                  colorClass: 'bg-gradient-to-br from-[#5F9EA0] to-[#008B8B]',
+                  stats: { total: 250, egyptGas: 180, institution: 70, pcCount: 110 },
+                  architecture: {
+                    supervisor: 'أ/ أسامة جلال',
                     dataEntry: { role: 'مشرف إدخال', name: 'قيد التعيين' },
                     recordingUpload: { role: 'مشرف رفع تسجيلي', name: 'قيد التعيين' },
                     surveyingUpload: { role: 'مشرف رفع مساحي', name: 'قيد التعيين' }
@@ -184,13 +195,42 @@
               id: 'safwat',
               role: 'مدير مساعد',
               name: 'أ/ صفوت عويس',
-              description: 'مدير مساعد: أ/ صفوت عويس',
+              description: 'مدير مساعد: أ/ صفوت عويس - يشرف على مناطق الوراق، الصعيد، والدقهلية',
               colorClass: 'bg-gradient-to-br from-[#3b82f6] to-[#2563eb]',
               regions: [
+                { 
+                  id: 'warraq', 
+                  role: 'منطقة الوراق', 
+                  name: 'أ/ جمال عبدالظاهر', 
+                  description: 'مدير منطقة الوراق: أ/ جمال عبدالظاهر', 
+                  colorClass: 'bg-gradient-to-br from-[#5F9EA0] to-[#008B8B]',
+                  stats: { total: 110, egyptGas: 70, institution: 40, pcCount: 45 },
+                  architecture: {
+                    supervisor: 'أ/ جمال عبدالظاهر',
+                    dataEntry: { role: 'مشرف إدخال', name: 'قيد التعيين' },
+                    recordingUpload: { role: 'مشرف رفع تسجيلي', name: 'قيد التعيين' },
+                    surveyingUpload: { role: 'مشرف رفع مساحي', name: 'قيد التعيين' }
+                  }
+                },
+                { 
+                  id: 'saeed', 
+                  role: 'منطقة الصعيد', 
+                  name: 'أ/ محمود عبدالسلام', 
+                  description: 'مدير منطقة الصعيد: أ/ محمود عبدالسلام', 
+                  colorClass: 'bg-gradient-to-br from-[#5F9EA0] to-[#008B8B]',
+                  stats: { total: 300, egyptGas: 200, institution: 100, pcCount: 130 },
+                  architecture: {
+                    supervisor: 'أ/ محمود عبدالسلام',
+                    dataEntry: { role: 'مشرف إدخال', name: 'قيد التعيين' },
+                    recordingUpload: { role: 'مشرف رفع تسجيلي', name: 'قيد التعيين' },
+                    surveyingUpload: { role: 'مشرف رفع مساحي', name: 'قيد التعيين' }
+                  }
+                },
                 { 
                   id: 'dakahlia', 
                   role: 'منطقة الدقهلية', 
                   name: 'أ/ ماجد موسى', 
+                  description: 'مدير منطقة الدقهلية: أ/ ماجد موسى', 
                   colorClass: 'bg-gradient-to-br from-[#5F9EA0] to-[#008B8B]',
                   stats: { total: 180, egyptGas: 120, institution: 60, pcCount: 80 },
                   architecture: {
@@ -207,67 +247,116 @@
 
         // --- COMPONENTS ---
 
-        const OrgNode = ({ manager, onClick, className = "", pulse = false, floating = false, compact = false }) => (
-          <div 
-            onClick={() => onClick && onClick(manager)}
-            className={`
-              org-node cursor-pointer rounded-2xl text-center shadow-lg border border-white/20 hover:scale-105 hover:border-white/50 transition-all duration-300
-              ${manager.colorClass} ${pulse ? 'pulse' : ''} ${floating ? 'floating' : ''} ${className}
-              ${compact ? 'p-2 min-w-[120px]' : 'p-4 min-w-[180px]'} flex flex-col items-center justify-center
-            `}
-            style={{ boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)' }}
-          >
-            <div className={`${compact ? 'text-xs' : 'text-sm'} font-bold text-white/80`}>{manager.role}</div>
-            <div className={`${compact ? 'text-sm' : 'text-lg'} font-bold text-white mt-1 leading-tight`}>{manager.name}</div>
-          </div>
+        const OrgNode = ({ manager, onClick, className = "", pulse = false, floating = false, compact = false }) => {
+          return (
+            <div 
+              onClick={() => onClick && onClick(manager)}
+              className={`
+                org-node cursor-pointer rounded-2xl text-center shadow-lg border border-white/20 hover:scale-105 hover:border-white/50 transition-all duration-300
+                ${manager.colorClass} ${pulse ? 'pulse' : ''} ${floating ? 'floating' : ''} ${className}
+                ${compact ? 'p-2 min-w-[120px]' : 'p-4 min-w-[180px]'} flex flex-col items-center justify-center
+              `}
+              style={{
+                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+              }}
+            >
+              <div className={`${compact ? 'text-[10px]' : 'text-sm'} font-bold text-white/80`}>{manager.role}</div>
+              <div className={`${compact ? 'text-sm' : 'text-lg'} font-bold text-white mt-1 leading-tight`}>{manager.name}</div>
+            </div>
+          );
+        };
+
+        const EditIcon = () => (
+          <svg className="w-4 h-4 opacity-40 group-focus-within:opacity-100 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
         );
 
         const ArchitectureModal = ({ manager, onClose, onSave, theme }) => {
           const [localArch, setLocalArch] = useState(null);
-          useEffect(() => { if (manager?.architecture) setLocalArch({ ...manager.architecture }); }, [manager]);
+
+          useEffect(() => {
+            if (manager?.architecture) {
+              setLocalArch({ ...manager.architecture });
+            }
+          }, [manager]);
+
           if (!manager || !localArch) return null;
 
           const handlePersonnelChange = (field, value) => {
-            setLocalArch(prev => ({ ...prev, [field]: { ...prev[field], name: value } }));
+            setLocalArch(prev => prev ? ({
+              ...prev,
+              [field]: { ...prev[field], name: value }
+            }) : null);
+          };
+
+          const handleSave = () => {
+            if (manager.id && localArch) {
+              onSave(manager.id, localArch);
+              onClose();
+            }
           };
 
           const isDark = theme === 'dark';
 
           return (
             <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-              <div className="absolute inset-0 bg-black/90 backdrop-blur-xl animate-in fade-in duration-300" onClick={onClose} />
-              <div className={`relative w-full max-w-4xl overflow-hidden border rounded-[3rem] shadow-2xl p-0 animate-in zoom-in-95 slide-in-from-top-12 duration-500 ${isDark ? 'bg-slate-900/95 text-white border-white/10' : 'bg-white/95 text-slate-900 border-slate-200'}`}>
+              <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={onClose} />
+              <div className={`relative w-full max-w-4xl overflow-hidden border rounded-[3rem] shadow-2xl p-0 animate-in ${isDark ? 'bg-slate-900/95 text-white border-white/10' : 'bg-white/95 text-slate-900 border-slate-200'}`}>
+                <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-br from-indigo-600/20 via-purple-600/20 to-cyan-600/20 opacity-50 blur-3xl pointer-events-none" />
                 <div className="p-8 md:p-12 relative z-10">
+                  <button onClick={onClose} className="absolute top-8 left-8 p-2 hover:bg-white/10 rounded-full transition-colors">
+                    <svg className="w-8 h-8 opacity-50 hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                   <header className="text-center mb-16">
+                     <div className="inline-block px-4 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-bold mb-4 tracking-widest uppercase border border-cyan-500/20">هيكل القوى البشرية</div>
                      <h2 className="text-4xl font-black bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">{manager.role}</h2>
-                     <div className="h-1 w-24 bg-cyan-500/50 mx-auto mt-4 rounded-full" />
                   </header>
                   <div className="flex flex-col items-center gap-12">
                     <div className="relative">
-                      <div className="px-10 py-6 bg-gradient-to-br from-indigo-600 to-blue-800 rounded-3xl text-center min-w-[280px]">
+                      <div className="px-10 py-6 bg-gradient-to-br from-indigo-600 to-blue-800 rounded-3xl shadow-2xl border border-white/20 text-center min-w-[280px]">
                         <div className="text-xs font-bold text-white/60 mb-1">مشرف المنطقة</div>
                         <div className="text-2xl font-black text-white">{localArch.supervisor}</div>
                       </div>
-                      <div className="absolute left-1/2 -translate-x-1/2 top-full w-1 h-12 bg-cyan-500" />
+                      <div className="absolute left-1/2 -translate-x-1/2 top-full w-1 h-12 bg-gradient-to-b from-blue-500 to-cyan-500" />
                     </div>
                     <div className="relative w-full max-w-3xl">
                        <div className="absolute top-[-1px] left-1/2 -translate-x-1/2 w-full h-[2px] bg-cyan-500" />
                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12">
-                          {['dataEntry', 'recordingUpload', 'surveyingUpload'].map((key) => (
-                            <div key={key} className="relative flex flex-col items-center">
+                          {[
+                            { key: 'dataEntry', color: 'from-emerald-600 to-teal-800' },
+                            { key: 'recordingUpload', color: 'from-amber-600 to-orange-800' },
+                            { key: 'surveyingUpload', color: 'from-cyan-600 to-blue-800' }
+                          ].map((node) => (
+                            <div key={node.key} className="relative flex flex-col items-center">
                                <div className="absolute top-[-48px] w-1 h-12 bg-cyan-500" />
-                               <div className="group w-full p-6 rounded-3xl bg-slate-800 border border-white/10">
-                                  <div className="text-[10px] font-bold text-white/50 mb-2">{localArch[key].role}</div>
-                                  <input type="text" value={localArch[key].name} onChange={(e) => handlePersonnelChange(key, e.target.value)} className="bg-transparent text-lg font-bold text-white focus:outline-none w-full border-b border-white/10 focus:border-cyan-400 pb-1" />
+                               <div className={`group w-full p-6 rounded-3xl bg-gradient-to-br ${node.color} shadow-xl border border-white/10 hover:scale-105 transition-all duration-300`}>
+                                  <div className="text-[10px] font-bold text-white/50 mb-2 tracking-tighter uppercase">{localArch[node.key].role}</div>
+                                  <div className="flex items-center gap-2">
+                                     <input 
+                                       type="text"
+                                       value={localArch[node.key].name}
+                                       onChange={(e) => handlePersonnelChange(node.key, e.target.value)}
+                                       className="bg-transparent text-lg font-bold text-white focus:outline-none w-full border-b border-transparent focus:border-white/30 pb-1"
+                                       placeholder="Assign name..."
+                                     />
+                                     <svg className="w-4 h-4 text-white/30 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                     </svg>
+                                  </div>
+                                  <div className="mt-4 text-[9px] text-white/40 italic">Add Name / Assign</div>
                                </div>
                             </div>
                           ))}
                        </div>
                     </div>
                   </div>
-                  <div className="mt-20 flex justify-center gap-4">
-                    <button onClick={() => onSave(manager.id, localArch)} className="px-12 py-5 bg-cyan-600 hover:bg-cyan-500 text-white font-black rounded-full transition-all">حفظ الهيكلية</button>
-                    <button onClick={onClose} className="px-12 py-5 bg-slate-700 hover:bg-slate-600 text-white font-black rounded-full transition-all">إغلاق</button>
+                  <div className="mt-20 flex justify-center">
+                    <button onClick={handleSave} className="px-12 py-5 bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 text-white font-black rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-3">
+                      <span>حفظ وتثبيت الهيكلية</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -277,11 +366,22 @@
 
         const RegionModal = ({ manager, onClose, onSave, onOpenArch, theme }) => {
           const [localStats, setLocalStats] = useState(null);
-          useEffect(() => { if (manager?.stats) setLocalStats({ ...manager.stats }); }, [manager]);
+          useEffect(() => {
+            if (manager?.stats) setLocalStats({ ...manager.stats });
+          }, [manager]);
+
           if (!manager || !localStats) return null;
 
           const handleChange = (field, value) => {
-            setLocalStats(prev => ({ ...prev, [field]: parseInt(value) || 0 }));
+            const numValue = parseInt(value) || 0;
+            setLocalStats(prev => prev ? ({ ...prev, [field]: numValue }) : null);
+          };
+
+          const handleSave = () => {
+            if (manager.id && localStats) {
+              onSave(manager.id, localStats);
+              onClose();
+            }
           };
 
           const isDark = theme === 'dark';
@@ -289,129 +389,271 @@
           return (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
               <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
-              <div className={`relative w-full max-w-lg overflow-hidden border rounded-[2.5rem] p-8 animate-in zoom-in-95 ${isDark ? 'bg-slate-900 text-white border-white/10' : 'bg-white text-slate-900 border-slate-200'}`}>
-                <h2 className="text-3xl font-bold mb-6 text-center">{manager.role}</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-bold opacity-60">إجمالي العدد</label>
-                    <input type="number" value={localStats.total} onChange={(e) => handleChange('total', e.target.value)} className="w-full bg-slate-800 text-white p-4 rounded-xl mt-1 border border-white/10 focus:border-cyan-400 outline-none" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-bold opacity-60">غاز مصر</label>
-                      <input type="number" value={localStats.egyptGas} onChange={(e) => handleChange('egyptGas', e.target.value)} className="w-full bg-slate-800 text-white p-4 rounded-xl mt-1 border border-white/10 outline-none" />
+              <div className={`relative w-full max-w-lg overflow-hidden border rounded-[2.5rem] shadow-2xl p-0 animate-in ${isDark ? 'bg-slate-900/90 text-white border-white/10' : 'bg-white/95 text-slate-900 border-slate-200'}`}>
+                <div className="h-2 w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500" />
+                <div className="p-8">
+                  <button onClick={onClose} className={`absolute top-6 left-6 transition-colors ${isDark ? 'text-white/30 hover:text-white' : 'text-slate-400 hover:text-slate-900'}`}>
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                  <header className="text-center mb-10">
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">{manager.role}</h2>
+                    <p className="opacity-60 font-medium text-lg mt-1">{manager.name}</p>
+                  </header>
+                  <div className="grid gap-4 mb-10">
+                    <div className={`group flex flex-col gap-1 p-5 rounded-3xl border transition-all duration-300 ${isDark ? 'bg-white/5 border-white/10 hover:border-cyan-500/30' : 'bg-slate-50 border-slate-200 hover:border-cyan-500/30'}`}>
+                      <span className="text-sm font-bold opacity-60">إجمالي العدد</span>
+                      <input type="number" value={localStats.total} onChange={(e) => handleChange('total', e.target.value)} className="bg-transparent text-3xl font-black text-cyan-400 focus:outline-none w-full" />
                     </div>
-                    <div>
-                      <label className="text-xs font-bold opacity-60">المؤسسة</label>
-                      <input type="number" value={localStats.institution} onChange={(e) => handleChange('institution', e.target.value)} className="w-full bg-slate-800 text-white p-4 rounded-xl mt-1 border border-white/10 outline-none" />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className={`p-5 rounded-3xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                        <span className="text-xs font-bold opacity-50">غاز مصر</span>
+                        <input type="number" value={localStats.egyptGas} onChange={(e) => handleChange('egyptGas', e.target.value)} className="bg-transparent text-xl font-bold focus:outline-none w-full" />
+                      </div>
+                      <div className={`p-5 rounded-3xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                        <span className="text-xs font-bold opacity-50">المؤسسة</span>
+                        <input type="number" value={localStats.institution} onChange={(e) => handleChange('institution', e.target.value)} className="bg-transparent text-xl font-bold focus:outline-none w-full" />
+                      </div>
+                    </div>
+                    <div className={`p-5 rounded-3xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                      <span className="text-sm font-bold opacity-70">عدد أجهزة الكمبيوتر (PC)</span>
+                      <input type="number" value={localStats.pcCount} onChange={(e) => handleChange('pcCount', e.target.value)} className="bg-transparent text-3xl font-black text-blue-400 focus:outline-none w-full" />
                     </div>
                   </div>
-                  <div>
-                    <label className="text-xs font-bold opacity-60">أجهزة الكمبيوتر</label>
-                    <input type="number" value={localStats.pcCount} onChange={(e) => handleChange('pcCount', e.target.value)} className="w-full bg-slate-800 text-white p-4 rounded-xl mt-1 border border-white/10 outline-none" />
+                  <div className="flex gap-4">
+                    <button onClick={handleSave} className="flex-[2] py-5 bg-gradient-to-r from-cyan-600 to-blue-700 text-white font-bold rounded-2xl shadow-xl transition-all active:scale-95">حفظ وتحديث البيانات</button>
+                    <button onClick={() => onOpenArch(manager)} className={`flex-[1.2] py-5 rounded-2xl shadow-lg font-bold ${isDark ? 'bg-white/10 text-white' : 'bg-slate-200 text-slate-800'}`}>عرض الهيكل</button>
                   </div>
-                </div>
-                <div className="mt-8 flex gap-4">
-                  <button onClick={() => onSave(manager.id, localStats)} className="flex-1 py-4 bg-cyan-600 rounded-xl font-bold text-white">حفظ</button>
-                  <button onClick={() => onOpenArch(manager)} className="flex-1 py-4 bg-slate-700 rounded-xl font-bold text-white">عرض الهيكل</button>
                 </div>
               </div>
             </div>
           );
         };
 
+        // --- MAIN APP ---
+
         const App = () => {
           const [theme, setTheme] = useState('dark');
           const [orgData, setOrgData] = useState(INITIAL_ORG_DATA);
-          const [loading, setLoading] = useState(true);
           const [selectedManager, setSelectedManager] = useState(null);
           const [archManager, setArchManager] = useState(null);
+          const canvasRef = useRef(null);
 
-          useEffect(() => {
-            const dataRef = ref(db, 'orgData');
-            onValue(dataRef, (snapshot) => {
-              const data = snapshot.val();
-              if (data) setOrgData(data);
-              else set(dataRef, INITIAL_ORG_DATA);
-              setLoading(false);
+          const toggleTheme = () => {
+            setTheme(prev => {
+              const next = prev === 'dark' ? 'light' : 'dark';
+              document.body.classList.toggle('light-mode', next === 'light');
+              return next;
             });
-          }, []);
+          };
+
+          const handleNodeClick = (manager) => {
+            if (manager.stats) setSelectedManager(manager);
+            else showInfo(manager.description);
+          };
+
+          const showInfo = (msg) => {
+            const modal = document.createElement('div');
+            modal.className = "fixed bottom-10 left-1/2 -translate-x-1/2 bg-blue-600/90 backdrop-blur-md text-white px-8 py-4 rounded-full shadow-2xl z-[150] animate-bounce text-sm font-bold text-center";
+            modal.innerText = msg;
+            document.body.appendChild(modal);
+            setTimeout(() => modal.remove(), 4000);
+          };
+
+          const showToast = (msg) => {
+            const toast = document.createElement('div');
+            toast.className = "fixed top-10 right-1/2 translate-x-1/2 bg-emerald-500 text-white px-6 py-3 rounded-full shadow-xl z-[200] animate-in fade-in slide-in-from-top-4 font-bold";
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+          };
 
           const handleSaveStats = (id, newStats) => {
-            const updated = { ...orgData };
-            updated.subManagers = updated.subManagers.map(sub => ({
-              ...sub, regions: sub.regions?.map(reg => reg.id === id ? { ...reg, stats: newStats } : reg)
-            }));
-            set(ref(db, 'orgData'), updated);
-            setSelectedManager(null);
+            setOrgData(prev => {
+              const newData = { ...prev };
+              newData.subManagers = newData.subManagers.map(sub => ({
+                ...sub, regions: sub.regions?.map(reg => reg.id === id ? { ...reg, stats: newStats } : reg)
+              }));
+              return newData;
+            });
+            showToast("✓ تم تحديث الإحصائيات");
           };
 
           const handleSaveArch = (id, newArch) => {
-            const updated = { ...orgData };
-            updated.subManagers = updated.subManagers.map(sub => ({
-              ...sub, regions: sub.regions?.map(reg => reg.id === id ? { ...reg, architecture: newArch } : reg)
-            }));
-            set(ref(db, 'orgData'), updated);
-            setArchManager(null);
+            setOrgData(prev => {
+              const newData = { ...prev };
+              newData.subManagers = newData.subManagers.map(sub => ({
+                ...sub, regions: sub.regions?.map(reg => reg.id === id ? { ...reg, architecture: newArch } : reg)
+              }));
+              return newData;
+            });
+            showToast("✓ تم تحديث الهيكلية");
           };
 
-          if (loading) return <div className="h-screen flex items-center justify-center bg-[#000015] text-cyan-400">جاري الاتصال بالسحابة...</div>;
+          useEffect(() => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            let animationFrameId;
+            const stars = [];
+            const numStars = 150;
+
+            const resize = () => {
+              canvas.width = window.innerWidth;
+              canvas.height = window.innerHeight;
+            };
+
+            window.addEventListener('resize', resize);
+            resize();
+
+            for (let i = 0; i < numStars; i++) {
+              stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                r: Math.random() * 1.5 + 0.5,
+                vx: Math.random() * 0.05 - 0.025,
+                vy: Math.random() * 0.05 - 0.025,
+                op: Math.random() * 0.5 + 0.5
+              });
+            }
+
+            const draw = () => {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              if (theme === 'dark') {
+                ctx.fillStyle = '#FFF';
+                stars.forEach(star => {
+                  ctx.beginPath();
+                  ctx.globalAlpha = star.op;
+                  ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+                  ctx.fill();
+                  star.x += star.vx;
+                  star.y += star.vy;
+                  if (star.x < 0) star.x = canvas.width;
+                  if (star.x > canvas.width) star.x = 0;
+                  if (star.y < 0) star.y = canvas.height;
+                  if (star.y > canvas.height) star.y = 0;
+                });
+              }
+              animationFrameId = requestAnimationFrame(draw);
+            };
+
+            draw();
+            return () => {
+              window.removeEventListener('resize', resize);
+              cancelAnimationFrame(animationFrameId);
+            };
+          }, [theme]);
 
           const isDark = theme === 'dark';
           const lineClass = isDark ? 'border-white/20' : 'border-slate-300';
           const bgLineClass = isDark ? 'bg-white/20' : 'bg-slate-300';
 
           return (
-            <div className={`min-h-screen relative p-8 ${theme === 'light' ? 'light-mode' : ''}`}>
-              <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} className="fixed top-6 left-6 z-50 p-4 bg-white/10 rounded-full border border-white/20">{isDark ? '🌙' : '☀️'}</button>
+            <div className={`min-h-screen relative overflow-x-hidden transition-colors duration-500`}>
+              <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none" />
               
+              <div onClick={toggleTheme} className="fixed top-6 left-6 z-50 cursor-pointer bg-white/10 backdrop-blur-md rounded-full p-3 border border-white/20 hover:bg-white/30 transition-all shadow-lg">
+                <span className="text-2xl">{isDark ? '🌙' : '☀️'}</span>
+              </div>
+
               <RegionModal manager={selectedManager} onClose={() => setSelectedManager(null)} onSave={handleSaveStats} onOpenArch={(m) => { setSelectedManager(null); setArchManager(m); }} theme={theme} />
               <ArchitectureModal manager={archManager} onClose={() => setArchManager(null)} onSave={handleSaveArch} theme={theme} />
 
-              <header className="text-center mb-16">
-                <h1 className="text-5xl font-black mb-2 flicker">إدارة المساحة وبيانات العملاء</h1>
-                <div className="inline-block bg-cyan-500/20 px-6 py-1 rounded-full text-cyan-400 font-bold pulse">رؤية 2026</div>
-              </header>
+              <main className="container mx-auto px-4 py-8 relative z-10 flex flex-col items-center">
+                <header className="text-center mb-16 w-full">
+                  <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-cyan-400 via-blue-300 to-white bg-clip-text text-transparent flicker">
+                    إدارة المساحة وبيانات العملاء
+                  </h1>
+                  <div className="inline-block bg-cyan-500/20 backdrop-blur-lg border border-cyan-500/50 px-6 py-1 rounded-full font-bold text-cyan-300 pulse">رؤية 2026</div>
+                </header>
 
-              <div className="flex flex-col items-center gap-12 max-w-6xl mx-auto">
-                <OrgNode manager={orgData.ceo} floating onClick={(m) => alert(m.description)} className="ring-4 ring-indigo-500/30" />
-                
-                <div className="relative w-full">
-                  <div className={`absolute top-[-30px] left-1/2 -translate-x-1/2 w-[70%] h-[30px] border-x-2 border-t-2 rounded-t-3xl ${lineClass}`} />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-4 relative">
-                    <div className="flex flex-col items-center relative">
-                      <div className="flex items-start gap-4 flex-row-reverse">
-                        <OrgNode manager={orgData.assistant} onClick={(m) => alert(m.description)} />
-                        <div className="pt-10 flex flex-row-reverse items-center">
-                          <div className={`w-8 h-[2px] ${bgLineClass}`} />
-                          <OrgNode manager={orgData.technical} compact onClick={(m) => alert(m.description)} className="scale-90" />
+                <div className="w-full max-w-6xl flex flex-col items-center space-y-20">
+                  
+                  {/* ROOT: CEO */}
+                  <div className="flex flex-col items-center relative z-20">
+                    <OrgNode manager={orgData.ceo} floating onClick={handleNodeClick} className="ring-4 ring-indigo-500/30" />
+                    {/* Main vertical stem down */}
+                    <div className={`absolute top-full w-[2px] h-10 ${bgLineClass}`}></div>
+                  </div>
+
+                  {/* Level 1: General Managers Split */}
+                  <div className="relative w-full z-10">
+                    {/* Horizontal T-bar connects the two branches */}
+                    {/* Width adjusted for better spacing. 20% margin on each side. */}
+                    <div className={`absolute top-[-40px] left-[20%] right-[20%] h-[40px] border-x-2 border-t-2 rounded-t-3xl ${lineClass}`}></div>
+                    
+                    <div className="grid grid-cols-2 gap-4 relative">
+                      
+                      {/* RIGHT BRANCH (RTL: First Column): Assistant Manager (Purple) */}
+                      {/* This branch needs extra right margin to accommodate the absolute positioned "Technical" node */}
+                      <div className="flex flex-col items-center relative mr-10 sm:mr-32">
+                        {/* Wrapper for Node + Vertical Lines */}
+                        <div className="relative flex flex-col items-center">
+                            <OrgNode manager={orgData.assistant} onClick={handleNodeClick} className="border-purple-400/50 relative z-20" />
+                            
+                            {/* TECHNICAL OFFICE: Side Attachment */}
+                            {/* In RTL, 'right' is the right edge. Positioned absolute to the right of Assistant. */}
+                            <div className="absolute top-1/2 -translate-y-1/2 -right-[150px] md:-right-[200px] flex items-center z-10">
+                                 {/* Technical Node */}
+                                 <OrgNode manager={orgData.technical} onClick={handleNodeClick} compact className="scale-90 border-blue-400/50" />
+                                 {/* Connector Line to Assistant */}
+                                 <div className={`w-10 md:w-16 h-[2px] ${bgLineClass}`}></div>
+                            </div>
+
+                            {/* Stem down to regions block */}
+                            <div className={`w-[2px] h-20 bg-gradient-to-b ${isDark ? 'from-purple-400/50' : 'from-purple-600/60'} to-transparent`}></div>
                         </div>
                       </div>
-                      <div className={`w-[2px] h-20 bg-gradient-to-b from-purple-500 to-transparent mt-4`} />
+
+                      {/* LEFT BRANCH (RTL: Second Column): Expert Manager (Cyan) */}
+                      <div className="flex flex-col items-center relative">
+                        <OrgNode manager={orgData.expert} onClick={handleNodeClick} className="border-cyan-400/50 z-20" />
+                        {/* Stem down to regions block */}
+                        <div className={`w-[2px] h-20 bg-gradient-to-b ${isDark ? 'from-cyan-400/50' : 'from-cyan-600/60'} to-transparent`}></div>
+                      </div>
+
                     </div>
-                    <div className="flex flex-col items-center">
-                      <OrgNode manager={orgData.expert} onClick={(m) => alert(m.description)} />
-                      <div className={`w-[2px] h-20 bg-gradient-to-b from-cyan-500 to-transparent mt-4`} />
+                  </div>
+
+                  {/* SHARED BLOCK: Regions Box */}
+                  <div className="relative w-full max-w-5xl z-10">
+                    {/* Connection bridge from stems above */}
+                    <div className={`absolute top-[-60px] left-[30%] right-[30%] h-[60px] border-x-2 border-t-2 rounded-t-[3rem] ${lineClass}`}></div>
+                    
+                    <div className={`bg-white/5 backdrop-blur-xl border-2 border-green-500/30 rounded-[3rem] p-8 shadow-2xl overflow-hidden ${!isDark ? 'bg-white/40' : ''}`}>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {orgData.subManagers.map((sub, idx) => (
+                          <div key={sub.id} className={`flex flex-col items-center ${idx !== 0 ? `md:border-r ${isDark ? 'border-white/10' : 'border-slate-300'}` : ''}`}>
+                            <OrgNode manager={sub} onClick={handleNodeClick} className="w-full max-w-[220px] shadow-none" />
+                            <div className="mt-8 flex flex-wrap justify-center gap-3 px-2">
+                              {sub.regions?.map(region => (
+                                <div key={region.id} className="group relative flex flex-col items-center">
+                                   <div className={`text-[9px] mb-1 font-bold uppercase tracking-tighter ${isDark ? 'text-white/40' : 'text-slate-500'}`}>المنطقة</div>
+                                   <OrgNode manager={region} onClick={handleNodeClick} compact className="scale-95 opacity-80 hover:opacity-100 ring-1 ring-cyan-500/10 shadow-sm" />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-8 pb-12 flex flex-col items-center w-full">
+                    <div className={`text-xl font-bold tracking-widest uppercase mb-6 ${isDark ? 'text-white/20' : 'text-slate-400'}`}>تطوير مستمر</div>
+                    <div className={`grid grid-cols-4 gap-4 w-full max-w-4xl ${isDark ? 'opacity-10' : 'opacity-20'}`}>
+                      {[1,2,3,4].map(i => <div key={i} className="h-16 border border-dashed border-current rounded-2xl"></div>)}
                     </div>
                   </div>
                 </div>
+              </main>
 
-                <div className="relative w-full mt-[-20px]">
-                  <div className={`absolute top-[-40px] left-1/2 -translate-x-1/2 w-[80%] h-[40px] border-x-2 border-t-2 rounded-t-3xl ${lineClass}`} />
-                  <div className={`bg-white/5 backdrop-blur-xl border-2 border-green-500/30 rounded-3xl p-8 grid grid-cols-1 md:grid-cols-3 gap-8 ${!isDark ? 'bg-white/50' : ''}`}>
-                    {orgData.subManagers.map((sub, idx) => (
-                      <div key={sub.id} className="flex flex-col items-center">
-                        <OrgNode manager={sub} />
-                        <div className="mt-8 flex flex-wrap justify-center gap-3">
-                          {sub.regions?.map(region => (
-                            <OrgNode key={region.id} manager={region} compact onClick={setSelectedManager} className="scale-95 opacity-80 hover:opacity-100" />
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              <footer className="text-center py-10 border-t border-white/5 opacity-50 relative z-10">
+                <div className={`text-xs font-light ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
+                  &copy; 2026 منظومة إدارة المساحة | التميز في البيانات والعمليات
                 </div>
-              </div>
+              </footer>
             </div>
           );
         };
