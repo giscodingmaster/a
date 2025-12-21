@@ -52,17 +52,12 @@
             50% { box-shadow: 0 0 20px rgba(137, 207, 240, 0.6), inset 0 0 25px rgba(137, 207, 240, 0.4); }
             100% { box-shadow: 0 0 10px rgba(0, 191, 255, 0.3), inset 0 0 15px rgba(0, 191, 255, 0.2); }
         }
-        /* Custom connectors */
-        .connector-line {
-            transition: border-color 0.5s ease, background-color 0.5s ease;
-        }
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
         
-        /* Modal Animation */
         .animate-in { animation: animateIn 0.3s ease-out forwards; }
         @keyframes animateIn {
             from { opacity: 0; transform: scale(0.95); }
@@ -83,10 +78,50 @@
 <body>
     <div id="root"></div>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // --- FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyBw0DLQnIfL7g0zd-cSKmQJTbERxrXxnfA",
+          authDomain: "dprt-archticture.firebaseapp.com",
+          databaseURL: "https://dprt-archticture-default-rtdb.firebaseio.com",
+          projectId: "dprt-archticture",
+          storageBucket: "dprt-archticture.firebasestorage.app",
+          messagingSenderId: "736962866624",
+          appId: "1:736962866624:web:ea63c054a655d03accac25",
+          measurementId: "G-99JVTM14X5"
+        };
+
+        // Initialize Firebase
+        let db, auth;
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getDatabase(app);
+            auth = getAuth(app);
+            console.log("Firebase initialized");
+        } catch (e) {
+            console.error("Firebase Init Error: Check your configuration at the top of the script.", e);
+        }
+
+        // Expose to window for React
+        window.firebaseDb = db;
+        window.firebaseSet = set;
+        window.firebaseRef = ref;
+        window.firebaseOnValue = onValue;
+        
+        window.firebaseAuth = auth;
+        window.firebaseSignIn = signInWithEmailAndPassword;
+        window.firebaseSignOut = signOut;
+        window.firebaseOnAuthStateChanged = onAuthStateChanged;
+    </script>
+
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- CONSTANTS & DATA ---
+        // --- DATA STRUCTURE ---
         const INITIAL_ORG_DATA = {
           ceo: {
             id: 'ceo',
@@ -252,7 +287,7 @@
             <div 
               onClick={() => onClick && onClick(manager)}
               className={`
-                org-node cursor-pointer rounded-2xl text-center shadow-lg border border-white/20 hover:scale-105 hover:border-white/50 transition-all duration-300
+                org-node group cursor-pointer rounded-2xl text-center shadow-lg border border-white/20 hover:scale-105 hover:border-white/50 transition-all duration-300 relative
                 ${manager.colorClass} ${pulse ? 'pulse' : ''} ${floating ? 'floating' : ''} ${className}
                 ${compact ? 'p-2 min-w-[120px]' : 'p-4 min-w-[180px]'} flex flex-col items-center justify-center
               `}
@@ -260,19 +295,146 @@
                 boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
               }}
             >
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>  
+              </div>
               <div className={`${compact ? 'text-[10px]' : 'text-sm'} font-bold text-white/80`}>{manager.role}</div>
               <div className={`${compact ? 'text-sm' : 'text-lg'} font-bold text-white mt-1 leading-tight`}>{manager.name}</div>
             </div>
           );
         };
 
-        const EditIcon = () => (
-          <svg className="w-4 h-4 opacity-40 group-focus-within:opacity-100 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-          </svg>
-        );
+        const EditIcon = ({ isReadOnly }) => {
+          if (isReadOnly) return null;
+          return (
+            <svg className="w-4 h-4 opacity-40 group-focus-within:opacity-100 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          );
+        };
 
-        const ArchitectureModal = ({ manager, onClose, onSave, theme }) => {
+        const LoginModal = ({ onClose, onLogin, theme }) => {
+            const [email, setEmail] = useState("");
+            const [password, setPassword] = useState("");
+            const [error, setError] = useState("");
+            const [loading, setLoading] = useState(false);
+            const isDark = theme === 'dark';
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setError("");
+                try {
+                    await onLogin(email, password);
+                    onClose();
+                } catch (err) {
+                    console.error(err);
+                    setError("فشل تسجيل الدخول. تأكد من البريد الإلكتروني وكلمة المرور.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={onClose} />
+                    <div className={`relative w-full max-w-md p-8 rounded-3xl shadow-2xl animate-in ${isDark ? 'bg-slate-900 border border-white/10' : 'bg-white'}`}>
+                        <h2 className="text-2xl font-bold mb-6 text-center">تسجيل دخول المسؤول</h2>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold opacity-70 mb-1">البريد الإلكتروني</label>
+                                <input 
+                                    type="email" 
+                                    required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className={`w-full p-3 rounded-xl border bg-transparent ${isDark ? 'border-white/20 focus:border-cyan-500' : 'border-slate-300 focus:border-blue-500'}`}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold opacity-70 mb-1">كلمة المرور</label>
+                                <input 
+                                    type="password" 
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className={`w-full p-3 rounded-xl border bg-transparent ${isDark ? 'border-white/20 focus:border-cyan-500' : 'border-slate-300 focus:border-blue-500'}`}
+                                />
+                            </div>
+                            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+                            <div className="pt-4 flex gap-3">
+                                <button type="submit" disabled={loading} className="flex-1 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl font-bold hover:shadow-lg disabled:opacity-50">
+                                    {loading ? 'جاري التحقق...' : 'دخول'}
+                                </button>
+                                <button type="button" onClick={onClose} className="px-6 py-3 rounded-xl border border-white/10 hover:bg-white/5">إلغاء</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const GeneralEditModal = ({ manager, onClose, onSave, theme, isReadOnly }) => {
+          const [data, setData] = useState({ name: '', role: '', description: '' });
+
+          useEffect(() => {
+            if (manager) setData({ name: manager.name, role: manager.role, description: manager.description || '' });
+          }, [manager]);
+
+          if (!manager) return null;
+          const isDark = theme === 'dark';
+
+          return (
+             <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
+              <div className={`relative w-full max-w-lg overflow-hidden border rounded-3xl shadow-2xl p-8 animate-in ${isDark ? 'bg-slate-900/95 text-white border-white/10' : 'bg-white/95 text-slate-900 border-slate-200'}`}>
+                <h3 className="text-2xl font-bold mb-6 text-center">{isReadOnly ? 'تفاصيل' : 'تعديل البيانات'}</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold opacity-60">المسمى الوظيفي</label>
+                    <input 
+                        type="text" 
+                        value={data.role} 
+                        readOnly={isReadOnly}
+                        onChange={e => setData({...data, role: e.target.value})} 
+                        className={`w-full p-3 rounded-xl border bg-transparent mt-1 ${isReadOnly ? 'border-transparent' : (isDark ? 'border-white/20 focus:border-cyan-400' : 'border-slate-300 focus:border-cyan-500')}`} 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold opacity-60">الاسم</label>
+                    <input 
+                        type="text" 
+                        value={data.name} 
+                        readOnly={isReadOnly}
+                        onChange={e => setData({...data, name: e.target.value})} 
+                        className={`w-full p-3 rounded-xl border bg-transparent mt-1 ${isReadOnly ? 'border-transparent font-bold text-lg' : (isDark ? 'border-white/20 focus:border-cyan-400' : 'border-slate-300 focus:border-cyan-500')}`} 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold opacity-60">الوصف / ملاحظات</label>
+                    <textarea 
+                        value={data.description} 
+                        readOnly={isReadOnly}
+                        onChange={e => setData({...data, description: e.target.value})} 
+                        rows="3" 
+                        className={`w-full p-3 rounded-xl border bg-transparent mt-1 ${isReadOnly ? 'border-transparent' : (isDark ? 'border-white/20 focus:border-cyan-400' : 'border-slate-300 focus:border-cyan-500')}`}
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 mt-8">
+                  {!isReadOnly && (
+                      <button onClick={() => onSave(manager.id, data)} className="flex-1 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl font-bold hover:shadow-lg transition-all">حفظ</button>
+                  )}
+                  <button onClick={onClose} className={`px-6 py-3 rounded-xl border hover:bg-white/5 ${isReadOnly ? 'w-full' : ''} ${isDark ? 'border-white/10' : 'border-slate-300'}`}>إغلاق</button>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const ArchitectureModal = ({ manager, onClose, onSave, theme, isReadOnly }) => {
           const [localArch, setLocalArch] = useState(null);
 
           useEffect(() => {
@@ -290,6 +452,10 @@
             }) : null);
           };
 
+           const handleSupervisorChange = (value) => {
+             setLocalArch(prev => prev ? ({ ...prev, supervisor: value }) : null);
+           };
+
           const handleSave = () => {
             if (manager.id && localArch) {
               onSave(manager.id, localArch);
@@ -304,21 +470,28 @@
               <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={onClose} />
               <div className={`relative w-full max-w-4xl overflow-hidden border rounded-[3rem] shadow-2xl p-0 animate-in ${isDark ? 'bg-slate-900/95 text-white border-white/10' : 'bg-white/95 text-slate-900 border-slate-200'}`}>
                 <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-br from-indigo-600/20 via-purple-600/20 to-cyan-600/20 opacity-50 blur-3xl pointer-events-none" />
-                <div className="p-8 md:p-12 relative z-10">
+                <div className="p-8 md:p-12 relative z-10 max-h-[90vh] overflow-y-auto">
                   <button onClick={onClose} className="absolute top-8 left-8 p-2 hover:bg-white/10 rounded-full transition-colors">
                     <svg className="w-8 h-8 opacity-50 hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
-                  <header className="text-center mb-16">
+                  <header className="text-center mb-10">
                      <div className="inline-block px-4 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-bold mb-4 tracking-widest uppercase border border-cyan-500/20">هيكل القوى البشرية</div>
                      <h2 className="text-4xl font-black bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">{manager.role}</h2>
                   </header>
                   <div className="flex flex-col items-center gap-12">
                     <div className="relative">
-                      <div className="px-10 py-6 bg-gradient-to-br from-indigo-600 to-blue-800 rounded-3xl shadow-2xl border border-white/20 text-center min-w-[280px]">
+                      <div className="px-10 py-6 bg-gradient-to-br from-indigo-600 to-blue-800 rounded-3xl shadow-2xl border border-white/20 text-center min-w-[280px] group">
                         <div className="text-xs font-bold text-white/60 mb-1">مشرف المنطقة</div>
-                        <div className="text-2xl font-black text-white">{localArch.supervisor}</div>
+                        <input 
+                           type="text" 
+                           value={localArch.supervisor} 
+                           readOnly={isReadOnly}
+                           onChange={(e) => handleSupervisorChange(e.target.value)}
+                           className={`bg-transparent text-2xl font-black text-white text-center w-full focus:outline-none border-b ${isReadOnly ? 'border-transparent' : 'border-transparent focus:border-white/50'}`}
+                        />
+                        <EditIcon isReadOnly={isReadOnly} />
                       </div>
                       <div className="absolute left-1/2 -translate-x-1/2 top-full w-1 h-12 bg-gradient-to-b from-blue-500 to-cyan-500" />
                     </div>
@@ -332,54 +505,61 @@
                           ].map((node) => (
                             <div key={node.key} className="relative flex flex-col items-center">
                                <div className="absolute top-[-48px] w-1 h-12 bg-cyan-500" />
-                               <div className={`group w-full p-6 rounded-3xl bg-gradient-to-br ${node.color} shadow-xl border border-white/10 hover:scale-105 transition-all duration-300`}>
+                               <div className={`group w-full p-6 rounded-3xl bg-gradient-to-br ${node.color} shadow-xl border border-white/10 ${!isReadOnly ? 'hover:scale-105 transition-all duration-300' : ''}`}>
                                   <div className="text-[10px] font-bold text-white/50 mb-2 tracking-tighter uppercase">{localArch[node.key].role}</div>
                                   <div className="flex items-center gap-2">
                                      <input 
                                        type="text"
                                        value={localArch[node.key].name}
+                                       readOnly={isReadOnly}
                                        onChange={(e) => handlePersonnelChange(node.key, e.target.value)}
-                                       className="bg-transparent text-lg font-bold text-white focus:outline-none w-full border-b border-transparent focus:border-white/30 pb-1"
-                                       placeholder="Assign name..."
+                                       className={`bg-transparent text-lg font-bold text-white focus:outline-none w-full border-b ${isReadOnly ? 'border-transparent' : 'border-transparent focus:border-white/30 pb-1'}`}
+                                       placeholder={isReadOnly ? "" : "Assign name..."}
                                      />
-                                     <svg className="w-4 h-4 text-white/30 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <svg className={`w-4 h-4 text-white/30 ${!isReadOnly ? 'group-hover:text-white transition-colors' : 'hidden'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                      </svg>
                                   </div>
-                                  <div className="mt-4 text-[9px] text-white/40 italic">Add Name / Assign</div>
                                </div>
                             </div>
                           ))}
                        </div>
                     </div>
                   </div>
-                  <div className="mt-20 flex justify-center">
-                    <button onClick={handleSave} className="px-12 py-5 bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 text-white font-black rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-3">
-                      <span>حفظ وتثبيت الهيكلية</span>
-                    </button>
-                  </div>
+                  {!isReadOnly && (
+                    <div className="mt-20 flex justify-center pb-8">
+                        <button onClick={handleSave} className="px-12 py-5 bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 text-white font-black rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-3">
+                        <span>حفظ وتثبيت الهيكلية</span>
+                        </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           );
         };
 
-        const RegionModal = ({ manager, onClose, onSave, onOpenArch, theme }) => {
-          const [localStats, setLocalStats] = useState(null);
+        const RegionModal = ({ manager, onClose, onSave, onOpenArch, theme, isReadOnly }) => {
+          const [localData, setLocalData] = useState(null);
+          
           useEffect(() => {
-            if (manager?.stats) setLocalStats({ ...manager.stats });
+            if (manager) setLocalData(JSON.parse(JSON.stringify(manager)));
           }, [manager]);
 
-          if (!manager || !localStats) return null;
+          if (!manager || !localData) return null;
 
-          const handleChange = (field, value) => {
+          const handleStatChange = (field, value) => {
             const numValue = parseInt(value) || 0;
-            setLocalStats(prev => prev ? ({ ...prev, [field]: numValue }) : null);
+            setLocalData(prev => ({ ...prev, stats: { ...prev.stats, [field]: numValue } }));
+          };
+          
+          const handleTextChange = (field, value) => {
+            setLocalData(prev => ({ ...prev, [field]: value }));
           };
 
           const handleSave = () => {
-            if (manager.id && localStats) {
-              onSave(manager.id, localStats);
+            if (manager.id) {
+              onSave(manager.id, localData);
               onClose();
             }
           };
@@ -391,36 +571,57 @@
               <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
               <div className={`relative w-full max-w-lg overflow-hidden border rounded-[2.5rem] shadow-2xl p-0 animate-in ${isDark ? 'bg-slate-900/90 text-white border-white/10' : 'bg-white/95 text-slate-900 border-slate-200'}`}>
                 <div className="h-2 w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500" />
-                <div className="p-8">
+                <div className="p-8 max-h-[90vh] overflow-y-auto">
                   <button onClick={onClose} className={`absolute top-6 left-6 transition-colors ${isDark ? 'text-white/30 hover:text-white' : 'text-slate-400 hover:text-slate-900'}`}>
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
-                  <header className="text-center mb-10">
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">{manager.role}</h2>
-                    <p className="opacity-60 font-medium text-lg mt-1">{manager.name}</p>
+                  <header className="text-center mb-6">
+                    <div className="flex flex-col items-center gap-2 mb-4">
+                        <label className="text-[10px] uppercase opacity-50">Role</label>
+                        <input 
+                            type="text" 
+                            value={localData.role} 
+                            readOnly={isReadOnly}
+                            onChange={(e) => handleTextChange('role', e.target.value)}
+                            className={`text-center text-3xl font-bold bg-transparent border-b ${isReadOnly ? 'border-transparent' : 'border-transparent focus:border-cyan-500'} focus:outline-none w-full bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent`}
+                        />
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                        <label className="text-[10px] uppercase opacity-50">Name</label>
+                         <input 
+                            type="text" 
+                            value={localData.name} 
+                            readOnly={isReadOnly}
+                            onChange={(e) => handleTextChange('name', e.target.value)}
+                            className={`text-center opacity-60 font-medium text-lg bg-transparent border-b ${isReadOnly ? 'border-transparent' : 'border-transparent focus:border-cyan-500'} focus:outline-none w-full ${isDark ? 'text-white' : 'text-black'}`}
+                        />
+                    </div>
                   </header>
+
                   <div className="grid gap-4 mb-10">
                     <div className={`group flex flex-col gap-1 p-5 rounded-3xl border transition-all duration-300 ${isDark ? 'bg-white/5 border-white/10 hover:border-cyan-500/30' : 'bg-slate-50 border-slate-200 hover:border-cyan-500/30'}`}>
                       <span className="text-sm font-bold opacity-60">إجمالي العدد</span>
-                      <input type="number" value={localStats.total} onChange={(e) => handleChange('total', e.target.value)} className="bg-transparent text-3xl font-black text-cyan-400 focus:outline-none w-full" />
+                      <input type="number" value={localData.stats.total} readOnly={isReadOnly} onChange={(e) => handleStatChange('total', e.target.value)} className={`bg-transparent text-3xl font-black text-cyan-400 focus:outline-none w-full ${isReadOnly ? 'pointer-events-none' : ''}`} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className={`p-5 rounded-3xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                         <span className="text-xs font-bold opacity-50">غاز مصر</span>
-                        <input type="number" value={localStats.egyptGas} onChange={(e) => handleChange('egyptGas', e.target.value)} className="bg-transparent text-xl font-bold focus:outline-none w-full" />
+                        <input type="number" value={localData.stats.egyptGas} readOnly={isReadOnly} onChange={(e) => handleStatChange('egyptGas', e.target.value)} className={`bg-transparent text-xl font-bold focus:outline-none w-full ${isReadOnly ? 'pointer-events-none' : ''}`} />
                       </div>
                       <div className={`p-5 rounded-3xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                         <span className="text-xs font-bold opacity-50">المؤسسة</span>
-                        <input type="number" value={localStats.institution} onChange={(e) => handleChange('institution', e.target.value)} className="bg-transparent text-xl font-bold focus:outline-none w-full" />
+                        <input type="number" value={localData.stats.institution} readOnly={isReadOnly} onChange={(e) => handleStatChange('institution', e.target.value)} className={`bg-transparent text-xl font-bold focus:outline-none w-full ${isReadOnly ? 'pointer-events-none' : ''}`} />
                       </div>
                     </div>
                     <div className={`p-5 rounded-3xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                       <span className="text-sm font-bold opacity-70">عدد أجهزة الكمبيوتر (PC)</span>
-                      <input type="number" value={localStats.pcCount} onChange={(e) => handleChange('pcCount', e.target.value)} className="bg-transparent text-3xl font-black text-blue-400 focus:outline-none w-full" />
+                      <input type="number" value={localData.stats.pcCount} readOnly={isReadOnly} onChange={(e) => handleStatChange('pcCount', e.target.value)} className={`bg-transparent text-3xl font-black text-blue-400 focus:outline-none w-full ${isReadOnly ? 'pointer-events-none' : ''}`} />
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <button onClick={handleSave} className="flex-[2] py-5 bg-gradient-to-r from-cyan-600 to-blue-700 text-white font-bold rounded-2xl shadow-xl transition-all active:scale-95">حفظ وتحديث البيانات</button>
+                    {!isReadOnly && (
+                        <button onClick={handleSave} className="flex-[2] py-5 bg-gradient-to-r from-cyan-600 to-blue-700 text-white font-bold rounded-2xl shadow-xl transition-all active:scale-95">حفظ وتحديث البيانات</button>
+                    )}
                     <button onClick={() => onOpenArch(manager)} className={`flex-[1.2] py-5 rounded-2xl shadow-lg font-bold ${isDark ? 'bg-white/10 text-white' : 'bg-slate-200 text-slate-800'}`}>عرض الهيكل</button>
                   </div>
                 </div>
@@ -434,9 +635,72 @@
         const App = () => {
           const [theme, setTheme] = useState('dark');
           const [orgData, setOrgData] = useState(INITIAL_ORG_DATA);
-          const [selectedManager, setSelectedManager] = useState(null);
+          const [selectedManager, setSelectedManager] = useState(null); // For Regions (Stats + Info)
+          const [generalEditManager, setGeneralEditManager] = useState(null); // For Non-Region nodes (CEO, etc)
           const [archManager, setArchManager] = useState(null);
+          const [user, setUser] = useState(null);
+          const [showLogin, setShowLogin] = useState(false);
           const canvasRef = useRef(null);
+
+          // Firebase Sync
+          useEffect(() => {
+             // Database Listener
+             if (window.firebaseDb && window.firebaseRef) {
+                 const dataRef = window.firebaseRef(window.firebaseDb, 'orgData');
+                 const unsubscribe = window.firebaseOnValue(dataRef, (snapshot) => {
+                     const val = snapshot.val();
+                     if (val) {
+                         setOrgData(val);
+                     } else {
+                         // Initial Seed if empty
+                         window.firebaseSet(dataRef, INITIAL_ORG_DATA);
+                     }
+                 });
+                 return () => unsubscribe();
+             }
+          }, []);
+
+          useEffect(() => {
+              // Auth Listener
+              if (window.firebaseAuth && window.firebaseOnAuthStateChanged) {
+                  const unsubscribe = window.firebaseOnAuthStateChanged(window.firebaseAuth, (currentUser) => {
+                      setUser(currentUser);
+                  });
+                  return () => unsubscribe();
+              }
+          }, []);
+
+          // Save to Firebase Helper
+          const persistData = (newData) => {
+              if (!user) {
+                  showToast("⚠️ لا تملك صلاحية التعديل");
+                  return;
+              }
+              setOrgData(newData); // Optimistic UI update
+              if (window.firebaseDb && window.firebaseSet && window.firebaseRef) {
+                  const dataRef = window.firebaseRef(window.firebaseDb, 'orgData');
+                  window.firebaseSet(dataRef, newData).then(() => {
+                      showToast("✓ تم الحفظ في قاعدة البيانات");
+                  }).catch(err => {
+                      console.error(err);
+                      showToast("❌ خطأ في الحفظ (تحقق من الصلاحيات)");
+                  });
+              } else {
+                  showToast("⚠️ Firebase not configured");
+              }
+          };
+
+          const handleLogin = async (email, password) => {
+              if (window.firebaseAuth && window.firebaseSignIn) {
+                  await window.firebaseSignIn(window.firebaseAuth, email, password);
+              }
+          };
+
+          const handleLogout = async () => {
+              if (window.firebaseAuth && window.firebaseSignOut) {
+                  await window.firebaseSignOut(window.firebaseAuth);
+              }
+          };
 
           const toggleTheme = () => {
             setTheme(prev => {
@@ -447,46 +711,76 @@
           };
 
           const handleNodeClick = (manager) => {
-            if (manager.stats) setSelectedManager(manager);
-            else showInfo(manager.description);
-          };
-
-          const showInfo = (msg) => {
-            const modal = document.createElement('div');
-            modal.className = "fixed bottom-10 left-1/2 -translate-x-1/2 bg-blue-600/90 backdrop-blur-md text-white px-8 py-4 rounded-full shadow-2xl z-[150] animate-bounce text-sm font-bold text-center";
-            modal.innerText = msg;
-            document.body.appendChild(modal);
-            setTimeout(() => modal.remove(), 4000);
+            if (manager.stats) {
+                // If it has stats, it's a Region/SubManager -> Open Region Modal
+                setSelectedManager(manager);
+            } else {
+                // Otherwise it's a generic node -> Open General Edit Modal
+                setGeneralEditManager(manager);
+            }
           };
 
           const showToast = (msg) => {
+            const existing = document.getElementById('toast');
+            if(existing) existing.remove();
+
             const toast = document.createElement('div');
+            toast.id = 'toast';
             toast.className = "fixed top-10 right-1/2 translate-x-1/2 bg-emerald-500 text-white px-6 py-3 rounded-full shadow-xl z-[200] animate-in fade-in slide-in-from-top-4 font-bold";
             toast.innerText = msg;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
           };
 
-          const handleSaveStats = (id, newStats) => {
-            setOrgData(prev => {
-              const newData = { ...prev };
-              newData.subManagers = newData.subManagers.map(sub => ({
-                ...sub, regions: sub.regions?.map(reg => reg.id === id ? { ...reg, stats: newStats } : reg)
-              }));
-              return newData;
-            });
-            showToast("✓ تم تحديث الإحصائيات");
+          // Update function for Regions (Stats + Name/Role)
+          const handleUpdateRegionData = (id, updatedData) => {
+            const newData = { ...orgData };
+            // Check SubManagers
+            const subIdx = newData.subManagers.findIndex(s => s.id === id);
+            if (subIdx !== -1) {
+                // It's a SubManager
+                newData.subManagers[subIdx] = { ...newData.subManagers[subIdx], ...updatedData };
+            } else {
+                // It's a nested Region inside a SubManager
+                newData.subManagers = newData.subManagers.map(sub => ({
+                    ...sub,
+                    regions: sub.regions?.map(reg => reg.id === id ? { ...reg, ...updatedData } : reg)
+                }));
+            }
+            persistData(newData);
           };
 
+          // Update function for Architecture
           const handleSaveArch = (id, newArch) => {
-            setOrgData(prev => {
-              const newData = { ...prev };
-              newData.subManagers = newData.subManagers.map(sub => ({
-                ...sub, regions: sub.regions?.map(reg => reg.id === id ? { ...reg, architecture: newArch } : reg)
-              }));
-              return newData;
-            });
-            showToast("✓ تم تحديث الهيكلية");
+            const newData = { ...orgData };
+            // Check SubManagers
+             const subIdx = newData.subManagers.findIndex(s => s.id === id);
+             if (subIdx !== -1) {
+                 newData.subManagers[subIdx].architecture = newArch;
+             } else {
+                 newData.subManagers = newData.subManagers.map(sub => ({
+                    ...sub,
+                    regions: sub.regions?.map(reg => reg.id === id ? { ...reg, architecture: newArch } : reg)
+                 }));
+             }
+             persistData(newData);
+          };
+
+          // Update function for Generic Nodes (CEO, Expert, etc)
+          const handleUpdateGeneralNode = (id, updatedFields) => {
+              const newData = { ...orgData };
+              // Find where this ID lives at the top level
+              if (newData.ceo.id === id) newData.ceo = { ...newData.ceo, ...updatedFields };
+              else if (newData.expert.id === id) newData.expert = { ...newData.expert, ...updatedFields };
+              else if (newData.assistant.id === id) newData.assistant = { ...newData.assistant, ...updatedFields };
+              else if (newData.technical.id === id) newData.technical = { ...newData.technical, ...updatedFields };
+              else {
+                  // Fallback: Check subManagers (though they usually go through RegionModal, this handles edge cases)
+                  const subIdx = newData.subManagers.findIndex(s => s.id === id);
+                  if (subIdx !== -1) newData.subManagers[subIdx] = { ...newData.subManagers[subIdx], ...updatedFields };
+              }
+              persistData(newData);
+              setGeneralEditManager(null);
           };
 
           useEffect(() => {
@@ -548,17 +842,58 @@
           const isDark = theme === 'dark';
           const lineClass = isDark ? 'border-white/20' : 'border-slate-300';
           const bgLineClass = isDark ? 'bg-white/20' : 'bg-slate-300';
+          const isReadOnly = !user; // Read only if not logged in
 
           return (
             <div className={`min-h-screen relative overflow-x-hidden transition-colors duration-500`}>
               <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none" />
               
+              {/* Theme Toggle */}
               <div onClick={toggleTheme} className="fixed top-6 left-6 z-50 cursor-pointer bg-white/10 backdrop-blur-md rounded-full p-3 border border-white/20 hover:bg-white/30 transition-all shadow-lg">
                 <span className="text-2xl">{isDark ? '🌙' : '☀️'}</span>
               </div>
 
-              <RegionModal manager={selectedManager} onClose={() => setSelectedManager(null)} onSave={handleSaveStats} onOpenArch={(m) => { setSelectedManager(null); setArchManager(m); }} theme={theme} />
-              <ArchitectureModal manager={archManager} onClose={() => setArchManager(null)} onSave={handleSaveArch} theme={theme} />
+              {/* Login/Lock Button */}
+              <div 
+                  onClick={() => user ? handleLogout() : setShowLogin(true)} 
+                  className="fixed top-6 right-6 z-50 cursor-pointer bg-white/10 backdrop-blur-md rounded-full p-3 border border-white/20 hover:bg-white/30 transition-all shadow-lg group"
+                  title={user ? "تسجيل خروج" : "تسجيل دخول مسؤول"}
+              >
+                {user ? (
+                   <div className="relative">
+                     <span className="text-2xl">🔓</span>
+                     <div className="absolute top-full mt-2 right-0 bg-black/80 text-white text-xs px-2 py-1 rounded hidden group-hover:block whitespace-nowrap">Admin Active</div>
+                   </div>
+                ) : (
+                   <span className="text-2xl grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">🔒</span>
+                )}
+              </div>
+
+              {/* Modals */}
+              {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLogin={handleLogin} theme={theme} />}
+
+              <RegionModal 
+                  manager={selectedManager} 
+                  onClose={() => setSelectedManager(null)} 
+                  onSave={handleUpdateRegionData} 
+                  onOpenArch={(m) => { setSelectedManager(null); setArchManager(m); }} 
+                  theme={theme}
+                  isReadOnly={isReadOnly}
+              />
+              <ArchitectureModal 
+                  manager={archManager} 
+                  onClose={() => setArchManager(null)} 
+                  onSave={handleSaveArch} 
+                  theme={theme} 
+                  isReadOnly={isReadOnly}
+              />
+              <GeneralEditModal 
+                  manager={generalEditManager}
+                  onClose={() => setGeneralEditManager(null)}
+                  onSave={handleUpdateGeneralNode}
+                  theme={theme}
+                  isReadOnly={isReadOnly}
+              />
 
               <main className="container mx-auto px-4 py-8 relative z-10 flex flex-col items-center">
                 <header className="text-center mb-16 w-full">
@@ -579,29 +914,21 @@
 
                   {/* Level 1: General Managers Split */}
                   <div className="relative w-full z-10">
-                    {/* Horizontal T-bar connects the two branches */}
-                    {/* Width adjusted for better spacing. 20% margin on each side. */}
                     <div className={`absolute top-[-40px] left-[20%] right-[20%] h-[40px] border-x-2 border-t-2 rounded-t-3xl ${lineClass}`}></div>
                     
                     <div className="grid grid-cols-2 gap-4 relative">
                       
                       {/* RIGHT BRANCH (RTL: First Column): Assistant Manager (Purple) */}
-                      {/* This branch needs extra right margin to accommodate the absolute positioned "Technical" node */}
                       <div className="flex flex-col items-center relative mr-10 sm:mr-32">
-                        {/* Wrapper for Node + Vertical Lines */}
                         <div className="relative flex flex-col items-center">
                             <OrgNode manager={orgData.assistant} onClick={handleNodeClick} className="border-purple-400/50 relative z-20" />
                             
                             {/* TECHNICAL OFFICE: Side Attachment */}
-                            {/* In RTL, 'right' is the right edge. Positioned absolute to the right of Assistant. */}
                             <div className="absolute top-1/2 -translate-y-1/2 -right-[150px] md:-right-[200px] flex items-center z-10">
-                                 {/* Technical Node */}
                                  <OrgNode manager={orgData.technical} onClick={handleNodeClick} compact className="scale-90 border-blue-400/50" />
-                                 {/* Connector Line to Assistant */}
                                  <div className={`w-10 md:w-16 h-[2px] ${bgLineClass}`}></div>
                             </div>
 
-                            {/* Stem down to regions block */}
                             <div className={`w-[2px] h-20 bg-gradient-to-b ${isDark ? 'from-purple-400/50' : 'from-purple-600/60'} to-transparent`}></div>
                         </div>
                       </div>
@@ -609,7 +936,6 @@
                       {/* LEFT BRANCH (RTL: Second Column): Expert Manager (Cyan) */}
                       <div className="flex flex-col items-center relative">
                         <OrgNode manager={orgData.expert} onClick={handleNodeClick} className="border-cyan-400/50 z-20" />
-                        {/* Stem down to regions block */}
                         <div className={`w-[2px] h-20 bg-gradient-to-b ${isDark ? 'from-cyan-400/50' : 'from-cyan-600/60'} to-transparent`}></div>
                       </div>
 
@@ -618,7 +944,6 @@
 
                   {/* SHARED BLOCK: Regions Box */}
                   <div className="relative w-full max-w-5xl z-10">
-                    {/* Connection bridge from stems above */}
                     <div className={`absolute top-[-60px] left-[30%] right-[30%] h-[60px] border-x-2 border-t-2 rounded-t-[3rem] ${lineClass}`}></div>
                     
                     <div className={`bg-white/5 backdrop-blur-xl border-2 border-green-500/30 rounded-[3rem] p-8 shadow-2xl overflow-hidden ${!isDark ? 'bg-white/40' : ''}`}>
